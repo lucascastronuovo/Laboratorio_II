@@ -1,0 +1,314 @@
+select *
+from employee
+where department_id = 10
+
+
+declare
+    v_nombre  employee.first_name%type;
+    v_salario employee.salary%type;
+begin
+    select first_name, salary
+    into v_nombre, v_salario --donde se guarda el dato q saca de la tabla
+    from employee
+    where department_id = 10;---employee_id = 736;
+
+    dbms_output.put_line('nombre: ' || v_nombre||' '||v_salario);
+
+exception
+ when no_data_found then
+    dbms_output.put_line('No existe el empleado buscado');
+
+ when too_many_rows then
+      dbms_output.put_line('Existe mas de un empleado en el departamento indicado');
+
+end;
+
+
+declare 
+  v_bbbbbb
+begin  --AAA
+  begin --BBB
+     select  AA
+     into
+   exception
+     when no_data_found then
+        XXXXXX
+   end;--BBB
+
+   dbms_output BB 
+
+
+end; --AAA
+
+
+---CONDICIONALES
+IF <condicion> then
+  xxxx;
+end if;
+
+IF <condicion> then
+  xxxx;
+else
+  yyyy;
+end if;
+
+IF <condicion_1> then
+  xxxx;
+elsif  <condicion_2> then
+   yyyy;
+elsif  <condicion_3> then
+    zzzzz;
+else
+    xzxzxzx;
+end if;
+
+declare
+  v_edad number(2);
+
+begin
+  v_edad := 15;
+  if v_edad < 18  then
+    dbms_output.put_line ('Secundario');
+  else
+      dbms_output.put_line ('Universidad');
+  end if;
+end;
+
+
+
+
+Desarrollar un bloque anónimo que reciba por variable de sustitución una fecha de nacimiento en el formato dd/mm/yyyy
+calcular la edad y mostrar por pantalla el nivel de escolaridad
+0-2 bebe
+3-5 jardín
+6-12 primaria
+13-17 secundaria
+18-25 universidad
+>25 trabajo
+
+
+declare
+  v_edad          number(3);
+  v_fecha         date;
+  v_fecha_ingreso  varchar2(10);
+begin
+   v_fecha_ingreso  := :ingrese_la_fecha_de_nacimiento; 
+   v_fecha := to_date (v_fecha_ingreso,'dd/mm/yyyy');
+   v_edad  := (sysdate -v_fecha)/365;
+   dbms_output.put_line(v_edad);
+    IF (V_EDAD <= 2) THEN
+        DBMS_OUTPUT.PUT_LINE('BEBE');
+    ELSIF (V_EDAD > 2 AND V_EDAD <= 5)THEN
+        DBMS_OUTPUT.PUT_LINE('JARDÍN');
+    ELSIF (V_EDAD > 5 AND V_EDAD <= 12)THEN
+        DBMS_OUTPUT.PUT_LINE('PRIMARIA');
+    ELSIF (V_EDAD > 12 AND V_EDAD <= 17)THEN
+        DBMS_OUTPUT.PUT_LINE('SECUNDARIA');
+    ELSIF (V_EDAD > 17 AND V_EDAD <= 25)THEN
+        DBMS_OUTPUT.PUT_LINE('UNIVERSIDAD');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('TRABAJO');
+    END IF;
+
+
+  end;
+
+
+repeticiones: 1..N
+loop
+   xxxx
+   xxxx
+   xxxx
+  exit when <condicion>
+end loop:  
+
+repeticiones: 0..N
+while <condicion> loop
+   xxxx
+   xxxx
+   xxxx
+end loop;
+
+repeticiones: X
+for i in [reverse]1..X loop
+  xxxx
+  xxxx
+  xxxx
+end loop;
+
+
+begin
+  for i in reverse 1..5 loop
+    dbms_output.put_line('posicion: '||i);
+  end loop;
+end ;
+
+
+2
+4
+6
+8
+10
+
+
+declare
+  v_tope  number(3);
+  v_multiplo  number(3);
+begin
+   v_tope := :ingrese_valor_maximo;
+   v_multiplo := 2;
+   while v_multiplo <= v_tope loop
+      dbms_output.put_line(v_multiplo);
+      v_multiplo := v_multiplo + 2;
+
+   end loop;  
+end;
+
+
+
+
+
+declare
+  v_tope  number(3);
+  v_multiplo  number(3);
+begin
+   v_tope := :ingrese_valor_maximo;
+   v_multiplo := 2;
+   while v_multiplo <= v_tope loop
+      dbms_output.put_line(v_multiplo);
+      v_multiplo := v_multiplo * 2;
+
+   end loop;  
+end;
+
+2
+4
+8
+16
+32
+64
+128
+
+
+
+declare
+ type tr_emp is record (
+     emp_id employee.employee_id%type,
+     nombre employee.first_name%type,
+     apellido employee.last_name%type,
+     salario employee.salary%type
+ );
+
+ type tt_emp is table of tr_emp index by binary_integer;
+
+ t_emp tt_emp;
+
+begin
+      t_emp(1).emp_id := 8;
+      t_emp(1).nombre := 'Jose';
+
+      t_emp(2).emp_id := 15;
+      t_emp(2).nombre := 'Martin';
+
+      t_emp(28).emp_id := 4;
+      t_emp(28).nombre := 'Pedro';
+
+
+    for i in 1..2 loop
+        dbms_output.put_line(t_emp(i).emp_id || ' '||t_emp(i).nombre);
+    end loop;
+        --dbms_output.put_line('-'||t_emp.next(2)||'-');
+end;
+/
+
+2
+3
+5
+8
+50
+51
+
+tabla.count -->> 6
+tabla.exists(5) --> true  
+tabla.exists(9)--> false
+tabla.first   -->   2
+tabla.last    -->  51
+tabla.next(8)   -->50
+tabla.prior(51)--> 50 
+tabla.delete(5)   --> borra el registro con indice 5
+tabla.trim   --> borra la tabla
+
+
+
+
+declare
+ type tr_emp is record (
+     emp_id employee.employee_id%type,
+     nombre employee.first_name%type,
+     apellido employee.last_name%type,
+     salario employee.salary%type
+ );
+
+ type tt_emp is table of tr_emp index by binary_integer;
+
+ t_emp tt_emp;
+ l_idx binary_integer;
+begin
+      t_emp(2).emp_id := 8;
+      t_emp(2).nombre := 'Jose';
+
+      t_emp(5).emp_id := 15;
+      t_emp(5).nombre := 'Martin';
+
+      t_emp(28).emp_id := 4;
+      t_emp(28).nombre := 'Pedro';
+
+      t_emp(50).emp_id := 65;
+      t_emp(50).nombre := 'Luis';
+
+    l_idx  := t_emp.first;
+    while l_idx <= t_emp.last loop
+        dbms_output.put_line(l_idx||' '||t_emp(l_idx).emp_id || ' '||t_emp(l_idx).nombre);
+        l_idx := t_emp.next(l_idx);
+    end loop;
+
+end;
+/
+
+
+
+
+
+declare
+ type tr_moneda is record (
+     descr  varchar2(35),
+     cotiz  number(5,2) );
+
+ type tt_moneda is table of tr_moneda index by varchar2(3);
+
+ t_moneda tt_moneda;
+ l_idx varchar2(3);
+begin
+      t_moneda('ARS').DESCR := 'Pesos';
+      t_moneda('ARS').cotiz := 1;
+
+      t_moneda('USD').DESCR := 'Dolar estadounidense';
+      t_moneda('USD').cotiz := 295;
+
+      t_moneda('BRL').DESCR := 'Real Brasilero';
+      t_moneda('BRL').cotiz := 55;
+
+      t_moneda('EUR').DESCR := 'Euro';
+      t_moneda('EUR').cotiz := 296;
+
+
+
+    l_idx  := t_moneda.first;
+    while l_idx <= t_moneda.last loop
+        dbms_output.put_line(l_idx||' '||t_moneda(l_idx).DESCR || ' '||t_moneda(l_idx).cotiz);
+        l_idx := t_moneda.next(l_idx);
+    end loop;
+
+end;
+/
+

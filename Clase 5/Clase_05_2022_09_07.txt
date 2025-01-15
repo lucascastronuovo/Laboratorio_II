@@ -1,0 +1,213 @@
+--cursores con parametros
+
+sintaxis:
+cursor cursor_name (parametros)
+is
+cursor_query
+
+
+--id de departamento, que muestre los empleados que tiene el departamento
+
+create or replace procedure listo_emp
+    (p_depto in department.department_id%type) is
+    cursor c_emp is
+        select first_name || ', ' || last_name nombre
+        from employee
+        where department_id = p_depto;
+    v_i number :=0;
+    v_x varchar2(1);
+    begin
+        select 'x' into v_x from department where department_id = p_depto;
+        for r_emp in c_emp loop
+            dbms_output.put_line(r_emp.nombre) ;
+            v_i := v_i +1;
+        end loop;
+        if v_i = 0 then
+            dbms_output.put_line('Este departamento no tiene empleados') ;
+        end if;
+    exception
+        when no_data_found then
+            dbms_output.put_line('El departamento no Existe ') ;
+end listo_emp;
+/    
+
+
+
+declare
+    v_num number(2) :=11;
+begin
+    listo_emp(v_num);
+end;
+/
+
+
+--Cursores anidados o encadenados
+
+create or replace procedure lista_emple_p_depto
+is
+    cursor c_dep is select department_id id , name from department order by department_id;
+    cursor c_emp (p_id_dep number) is select employee_id id, first_name nombre , last_name apellido from employee where department_id = p_id_dep;
+    v_i number := 0;
+    begin
+        for r_dep in c_dep loop
+            dbms_output.put_line ('------------------------------------------------');
+            dbms_output.put_line (r_dep.id || ' ' || r_dep.name );
+            dbms_output.put_line ('------------------------------------------------');
+            for r_emp in c_emp (r_dep.id) loop
+                dbms_output.put_line ('    ID: '|| r_emp.id || ' ' || r_emp.nombre || ' ' || r_emp.apellido);
+                v_i := v_i + 1;
+            end loop;
+            if v_i = 0 then
+                dbms_output.put_line ( '    El departamento no tiene empleados');
+            else
+                dbms_output.put_line ( '    Cantidad de Empleados: ' ||v_i);
+            end if;
+            v_i := 0;
+        end loop;
+end lista_emple_p_depto;
+
+begin
+    lista_emple_p_depto;
+end;
+
+
+
+
+create or replace 
+procedure pr_cli_x_ven (pi_vend_id  IN customer.salesperson_id%type) is
+
+  cursor c_cli is 
+  select name, credit_limit
+  from customer 
+  where salesperson_id = pi_vend_id;
+
+   v_limite_desc  varchar2(5);
+   v_cant_cli   number(3) := 0;
+   v_emple      number(1);
+begin 
+   for r_cli in c_cli loop
+      if r_cli.credit_limit <= 4000 then
+        v_limite_desc := 'BAJO';
+      ELSIF r_cli.credit_limit <= 8500 THEN
+        v_limite_desc := 'MEDIO';
+      ELSE
+        v_limite_desc := 'ALTO';
+      END IF;    
+      dbms_output.put_line(r_cli.name||' '||r_cli.credit_limit||' ' ||v_limite_desc);
+      v_cant_cli := v_cant_cli +1;
+   end loop;
+   if v_cant_cli = 0 then
+       select 1
+         into v_emple 
+         from employee
+        where employee_id = pi_vend_id;
+         
+        dbms_output.put_line ('El vendedor tiene clientes asignados');       
+   end if;
+
+exception
+  when no_data_found then
+     dbms_output.put_line ('El vendedor no existe');   
+end;  
+
+
+
+begin
+  pr_cli_x_ven(736);
+end;
+
+select*
+from employee
+
+
+begin
+  dbms_output.put_line (  FU_PROM_SAL(10) );
+end ;
+
+select FU_PROM_SAL(10)
+from dual
+
+
+select department_id , name , FU_PROM_SAL(department_id)
+from department
+
+create or replace function FU_EMP_ID  (pi_nombre    in employee.first_name%type,
+                     pi_apellido in employee.last_name%type)
+            return NUMBER is
+
+  v_emp_id  employee.employee_id%type;
+ 
+
+
+begin
+  select employee_id
+    into v_emp_id
+    from employee
+   where upper(first_name) = upper(pi_nombre)
+     and upper(last_name) = upper(pi_apellido); 
+
+  return v_emp_id;
+exception
+  when no_data_found then
+    raise_application_error(-20001,'Empleado no existe');
+  when too_many_rows then
+    raise_application_error(-20002,'Existe mas de un empleado con el mismo nombre y apellido');
+  when others then
+    raise_application_error(-20003,'Error insesperado al validar empleado '||sqlerrm);
+
+end;
+
+
+create or replace procedure PR_ALTA_EMP   (pi_nombre   IN employee.first_name%type,
+                                           pi_apellido IN employee.last_name%type,
+                                           pi_dep_id   IN department.department_id%type) is
+l_max_id  number(4);
+l_emp_id  number(4);
+
+e_emp_no_existe  exception;
+pragma exception_init(e_emp_no_existe,-20001);
+e_emp_duplicado  exception;
+pragma exception_init(e_emp_duplicado,-20002);
+
+begin
+  begin
+   l_emp_id := fu_emp_id(pi_nombre,pi_apellido);
+   dbms_output.put_line('El empleado ya existe');   
+   exception
+     when e_emp_no_existe then
+       select max(employee_id)+1
+       into l_max_id
+       from employee; 
+
+        insert 
+        into employee
+          (employee_id, first_name, last_name, department_id)
+        values   
+           (l_max_id,pi_nombre,pi_apellido,pi_dep_id);
+     when  e_emp_duplicado then
+         dbms_output.put_line('El empleado ya existe y esta duplicado');     
+    end;       
+end;
+
+
+
+
+begin
+  dbms_output.put_line (  FU_emp_id('Ale','Perez') );
+end ;
+
+
+select *
+from employee
+
+insert 
+into employee
+  (employee_id, first_name, last_name, department_id)
+values   
+   (3001,'Ale','Perez',10)
+
+
+
+ begin
+ PR_ALTA_EMP ('Ale','Perez',10);
+ end;  

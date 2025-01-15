@@ -1,0 +1,149 @@
+create or replace package PA_EMPLEADOS as
+
+PROCEDURE pr_modif_salario (pi_nombre   employee.first_name%type,
+                            pi_apellido employee.last_name%type,
+                            pi_salario  employee.salary%type) ;
+
+PROCEDURE pr_modif_salario (pi_emp_id  employee.employee_id%type,
+                            pi_salario employee.salary%type) ;
+
+PROCEDURE pr_muestra (pi_nombre  varchar2);     
+procedure pr_lista_dep;
+
+end;
+
+
+create or replace package body "PA_EMPLEADOS" is
+
+e_emp_noex exception;
+e_emp_dupl exception;
+e_emp_otro exception;
+pragma exception_init(e_emp_noex,-20001);
+pragma exception_init(e_emp_dupl,-20002);
+pragma exception_init(e_emp_otro,-20003);
+
+type tr_depto is record (p_id_depto department.department_id%type,
+                         p_name     department.name%type,
+                         p_count_emple    number,
+                         p_prom_salary    number);
+
+type tt_dep is table of tr_depto index by binary_integer;
+
+t_dep tt_dep;
+
+cursor c_depto is 
+    select d.department_id , d.name , count(e.employee_id) , avg(e.salary)
+    from department d, employee e
+    where d.department_id = e.department_id
+    group by d.department_id , d.name;
+
+
+/***************************************************/
+function fu_emp_id(pi_nombre   employee.first_name%type,
+                   pi_apellido employee.last_name%type)
+                 return  employee.employee_id%type is
+  l_emp_id employee.employee_id%type;
+begin
+
+  select employee_id
+    into l_emp_id
+    from employee
+   where upper(first_name) = upper(pi_nombre)
+     and upper(last_name) = upper(pi_apellido);
+
+   return l_emp_id;
+  exception
+    when no_data_found then
+      raise_application_error(-20001,'EMPLEADO NO EXISTE');
+    when too_many_rows then  
+      raise_application_error(-20002,'mas de un empleado con el mismo nombre');
+    when others then
+      raise_application_error(-20003,'error inesperado '||sqlerrm);
+        
+  end;                 
+
+/***************************************************/
+
+
+PROCEDURE pr_modif_salario (pi_emp_id  employee.employee_id%type,
+                            pi_salario employee.salary%type) 
+as
+begin
+   update employee
+   set salary = pi_salario
+   where employee_id = pi_emp_id;
+ 
+   if sql%rowcount = 1 then  
+      dbms_output.put_line('El salario se modifico exitosamente');
+   else
+      dbms_output.put_line('El empleado no existe');
+   end if;
+
+end PR_MODIF_SALARIO;
+/**********************************************/
+PROCEDURE pr_modif_salario (pi_nombre   employee.first_name%type,
+                            pi_apellido employee.last_name%type,
+                            pi_salario  employee.salary%type) is
+  l_emp_id employee.employee_id%type;
+
+
+
+begin
+
+   l_emp_id := fu_emp_id (pi_nombre,pi_apellido);
+   pr_modif_salario(l_emp_id,pi_salario);
+exception
+  when e_emp_noex then
+    dbms_output.put_line('empleado no existe');
+  when e_emp_dupl then
+    dbms_output.put_line('mas de un empleado con el mismo nombre');
+  when e_emp_otro then
+    dbms_output.put_line('error inesperado el buscar el empleado '||sqlerrm);
+
+ end;
+ /****************************************************/ 
+
+PROCEDURE pr_muestra (pi_nombre  varchar2) is
+begin
+  dbms_output.put_line(pi_nombre);     
+ end; 
+ /****************************************************/ 
+
+procedure pr_lista_dep is
+
+ cursor c_emp  (p_dep_id department.department_id%type) is
+   select first_name, last_name
+   from employee
+   where department_id = p_dep_id;
+   
+
+begin
+ 
+   for i in 1..t_dep.count loop
+     dbms_output.put_line  (t_dep(i).p_id_depto ||' '||t_dep(i).p_name||' '||t_dep(i).p_count_emple||' '||t_dep(i).p_prom_salary);
+     for r_emp in c_emp (t_dep(i).p_id_depto) loop
+        dbms_output.put_line ('     '|| r_emp.first_name||' '||r_emp.last_name);
+     end loop;      
+     dbms_output.put_line ('  ');
+
+
+   end loop;
+
+end;
+
+
+ /****************************************************/ 
+
+/*one time only*/
+begin
+
+  select d.department_id , d.name , count(e.employee_id) , avg(e.salary)
+    bulk collect into t_dep
+    from department d, employee e
+    where d.department_id = e.department_id
+    group by d.department_id , d.name
+    order by d.department_id;
+
+
+  dbms_output.put_line('Primera vez');
+end ;

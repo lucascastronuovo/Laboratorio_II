@@ -1,0 +1,2417 @@
+-- GENERALIDADES IMPORTANTES:
+
+-- --> EN LA TABLA CUSTOMER, EL SALESPERSON_ID CORRESPONDE AL ID DEL EMPLEADO, O SEA QUE SALESPERSON_ID = EMPLOYEE_ID QUE ACTUA COMO CLAVE FORÁNEA EN LA TABLA CUSTOMER, AL HACERSE UN INNER JOIN ENTRE
+    -- LA TABLA CUSTOMER Y EMPLOYEE NO SERÍA NECESARIO USAR UN ALIAS YA QUE AMBOS TIENEN UN NOMBRE DE COLUMNA/CAMPO DISTINTO AUNQUE SIGNIFICARAN LO MISMO.
+
+-- --> (date - date)/365 = edad
+
+-- PARA QUE EL PRECIO DE UN PRODUCTOD DE LIST_PRICE SEA VIGENTE EL END_DATE DEBE SER NULO
+
+
+-- ---------------------------------------------------------------------------------------------CLASE 1---------------------------------------------------------------------------------------------------------------------------------------
+
+select *
+from employee
+where department_id = 10
+order by first_name  --select normal, trayendo todos los datos de todos los empleados que forman parte del departamento con id 10, ordenados por el nombre, partiendo los que empiezan con a hasta la z
+
+
+--Forma de hacer join con 2 tablas:
+
+select first_name, last_name, name
+from employee e,
+     department d
+where e.department_id = d.department_id 
+and e.department_id = 10
+order by first_name  -- une las dos tablas, permitiendo traer columnas de la tabla employee y department
+
+
+-- OUTER JOIN --> agrega datos ficticios en columnas donde hay filas que no presentan datos en esa columna por un inner join (por lo general). SIN EL OUTER JOIN HABRÍA FILAS QUE, POR NO TENER DATOS EN CIERTAS COLUMNAS
+                --DE CONDICION EN EL WHERE, NO APARECERÍAN. EJEMPLO, EL DUEÑO NO TIENE JEFE, POR LO QUE NO TIENE DATO EN EL MANAGER_ID Y NO CUMPLICA CON EL WHERE. CON EL OUTER JOIN SE LE AGREGO UN JEFE FICTICIO PARA QUE
+                --ASÍ APAREZCA EN EL SELECT. EL OUTER JOIN PERMITE MOSTRAR AQUELLAS FILAS DE UNA TABLA QUE NO SE RELACIONAN CON LAS FILAS DE LA OTRA TABLA.
+
+select j.first_name, j.last_name, e.first_name, e.last_name
+from employee e,
+     employee j
+where e.manager_id = j.employee_id  (+) -- se agrega (+) del lado donde falta el dato
+order by 1,2,3
+
+
+select distinct name
+from department -- trae los datos de la columna name, sin mostrar datos/filas duplicadas
+
+
+/*
+OPERADORES LÓGICOS:
+=
+<
+>
+<=
+>=
+!=
+in(num, num, num) ---> que el numero o dato sea alguno de los que está dentro del paréntesis
+between num1 and num2 ---> que el numero o dato esté entre num1 y num2 (el between abarca ambos extremos)
+like 'A%' (que el dato/string empiece con A y que luego el resto sea cualquier caracter)
+like 'A%RACK%' (Que empiece con A, que sea cualquier caracter lo que sigue y que luego venga RACK y luego cualquier caracter)
+like '_E%' (_ significa cualquier caracter (pero solo uno), y luego E y luego culquier cadena de caracteres)
+*/
+
+--CASO: USO DEL BETWEEN EN LA TABLA SALARY GRADE (Ejercicio Práctica 1)
+select first_name, salary, grade_id
+from employee, salary_grade
+where salary between lower_bound and upper_bound --(La relación entre las 2 tablas se dá con el between, indicando a qué grado está el salario del empleado (por eso se relacionan y puede hacerse una "especie de innerjoin"))
+
+
+-- UPPER O LOWER
+select *
+from product
+where upper(description) like upper('_E%') -- convierte lo que está en parentesis todo en máyuscula para eliminar lo KEY SENSITIVE para que los 2 strings se comparen en máyusculas (se asegura que estén ambos en mayúsculas)
+                                           -- aunque se pone todo en mayúscula para la comparación, luego se muestran los datos como corresponden
+
+
+select *
+from product
+where lower(description) like lower('_E%') -- la misma funcion que el upper pero pone a los strings en minúsculas para la comparación "segura"
+
+
+-- Concatenar columnas en una sola
+select first_name || ' ' || last_name
+from employee
+
+-- COMPARAR y TRABAJAR SOBRE VALORES NULOS
+--3 formas:
+select *
+from employee
+where department_id is null 
+
+-- nvl (línea 134) 
+
+-- decode (línea 154)
+
+--Variables de Sustitución (Inputs):
+select *
+from employee
+where department_id = :depto
+
+
+-- FUNCIONES DE FILA SIMPLE ---> funciones por cada fila
+
+--funciones del upper y lower
+
+select initcap(first_name)
+from employee -- pone la primera letra en mayúscula y el resto en minúscula
+
+select substr(description, 1, 5)
+from product -- Va a pner, desde la posición 1(en este caso), 5 caracteres(en este caso) SOLO FUNCIONA PARA STRINGS
+
+--tabla dual: tabla del sistema de una sola fila, que sirve para ejecutar alguna funcion en el select en donde necesito 1 sola fila
+select 'Hola Mundo'
+from dual
+
+--funcion trim --> saca todos los espacios de lo que se muestra en el select
+select '-' ||trim('---------------------------------------------------------------------------Hola Mundo'||'-'
+from dual
+
+select lpad('Hola',10,'*')
+from dual  -- con lpad te rellena con lo indicado en el tercer argumento, lo indicado en el primer argumento, la cantidad necesaria para llegar a la cantidad de caracteres total indicada en el 
+           -- segundo argumento (junto con lo del primer argumento) EN LA PARTE IZQUIERDA DEL PRIMER ARGUMENTO
+
+select rpad('Hola',10,'*')
+from dual  -- con rpad te rellena con lo indicado en el tercer argumento, lo indicado en el primer argumento, la cantidad necesaria para llegar a la cantidad de caracteres total indicada en el 
+           -- segundo argumento (junto con lo del primer argumento) EN LA PARTE DERECHA DEL PRIMER ARGUMENTO
+
+select round(254.6786, 2)
+from dual   -- con round se indica en el primer argumento el dato numérico, y en el segundo la cantidad de decimales que debe tener el dato numérico, redondeando para que queden la cantidad de decimales indicada, si es necesario.
+            -- si el número es entero, no se redondea ni se ponen los decimales. TENER EN CUENTA QUE LOS DECIMALES SE INDICAN CON PUNTO "."
+
+select trunc(254.6786)
+from dual   -- con trunc se truncan los decimales
+
+select sysdate
+from dual -- sysdate devuelve la fecha de la base y también devuelve la hora, minuto, segundo y milisegundos 
+
+select user
+from dual -- la función user devuelve el usuario de la base
+
+select first_name, last_name, salary, commission, salary+nvl(commission, 0)  salario_total
+from employee  -- convierte los valores nulos que haya en la columna indicada en el primer argumento en otro valor, indicado
+               -- en el segundo argumento (del mismo tipo que el tipo de valor de la columna indicada en el primer argumento)
+
+--CASTEO DE:
+-- fechas
+select to_date('26/06/2011', 'dd/mm/yyyy') --cuenta con 2 parámetros (los 2 parámetros/argumentos son cadenas de caracteres)
+from dual -- convierte la cadena de caracteres (que sería el primer argumento) en fecha, donde se indica lo que corresponde al dia, al mes, al año desde el segundo argumento
+          -- se mostrará la fecha desde el select, según el formato que le dí en el primer argumento
+
+-- caracteres
+select to_char(250.25), to_char(sysdate, 'dd--mm--yyyy hh24:mi:ss'), to_char(sysdate,'yy')
+from dual -- Convierte los números y fechas en caracteres, cuando se convierte una fecha a caracter con sysdate, se debe indicar en el segundo argumento con '' si queres mostrar
+          -- los días, los meses, los años, las horas, o todo. El sysdate tiene todo completo, toda la información de la fecha
+
+
+-- números
+select to_number('123.456')
+from dual -- Convierte los caracteres en un número (por lo menos un número en este caso). SI O SI el string debe ser valores numéricos
+
+select department_id, name, decode(location_id, 122, 'loc 122', /* como un if location_id = 122 then location_id = 'loc 122'*/
+                                                124, 'loc 124', /* como un elsif location_id = 124 then location_id = 'loc 124'*/
+                                                'otro loc')     /* como un else location_id = 'otro loc'*/
+from department d 
+                  -- en el decode, en el primer parámetro, a lo que voy a decodificar (campo/columna). En el segundo se indica el si el valor de location_id es 122, que en ves de que muestre el 122, muestre
+                  -- una cadena de caracteres como por ejemplo 'loc 122' (esto indicado en el tercer parámetro) (EJEMPLO). En el cuarto parámetro sería como un else if y el quinto parametro lo que tendría que ir si se cumple con
+                  -- lo del cuarto parámetro y así hasta que si se agrega un solo parámetro más, se indicará allí lo que se tendrá que mostrar si, por ejemplo, location_id no sea ni 122 ni 124. Puede no agregarse ese
+                  -- último parámetro. ACÁ SI SE PUEDE VARIAR DE TIPO DE DATO.
+
+-- FUNCIONES DE FILA GRUPO
+-- en el group by se deben poner todas las columnas del select que no pertenezcan a las funciones de grupos puestas en el select (creo que con max y min no hay problema con eso) --> ¡¡¡¡¡IMPORTANTE!!!!!
+
+select department_id, count(employee_id)
+from employee
+group by department_id  -- con count se cuentan las filas del campo/columna indicada como parámetro, que hay en cada grupo. En este caso, se cuentan la cantidad de empleados que hay en cada departamento.
+
+
+select department_id, avg(salary)
+from employee
+group by department_id -- con avg se calcula el promedio de los valores de las filas que forman parte de la columna/campo indicada como parámetro. En este caso, se muestra el promedio de salarios de cada departamento.
+
+
+select department_id, max(salary), min (salary)
+from employee
+group by department_id -- con max y min se calcula el máximo y mínimo, respectivamente, de los valores de las filas que forman parte de la columna/campo indicada como parámetro.
+                       -- En este caso, se muestra el máximo y mínimo de salarios de cada departamento.
+
+select department_id, sum(salary)
+from employee 
+where salary < 3000
+group by department_id -- con sum se suman las filas que forman parte de la columna/campo indicado como parámetro. En este caso, se muestra la suma de salarios por cada departamento
+having count(employee_id) > 3 -- HAVING para filtrar filas de grupo. Sería como el where pero para filas de grupo. En este caso, se mostrará el select en aquellos departamentos con más de 3 empleados
+-- En este query, se pide mostrar la suma de salarios de cada departamento, donde los salarios de los empleados deben ser menor a 3000 y en cada departamento debe haber más de 3 empleados.
+
+
+
+-- ---------------------------------------------------------------------------------------------CLASE 2---------------------------------------------------------------------------------------------------------------------------------------
+
+
+--MODIFICACIONES EN SQL:
+
+
+--INSERT --> AGREGAR DATOS, "DAR DE ALTA" --> INSERTA SOLO UNA FILA (CAMINO FELIZ) O PUEDE DAR ERROR (CAMINO TRISTE)
+insert into 
+tabla [(campo1,campo2,campo3,etc)]
+values
+  (valor1,valor2,valor,etc)
+
+--ejemplo:
+insert into 
+department (department_id,name,location_id) 
+values
+  (58,'Prueba',155)  --SI NO SE INDICAN LOS CAMPOS A AGREGAR CON INSERT, SE TIENE QUE PONER LOS VALORES DE TODOS LOS CAMPOS. 
+                     --ES MEJOR PONER LOS CAMPOS PARA QUE SI EN EL FUTURO SE AGREGA UNA NUEVA COLUMNA EL INSERT FUNCIONARÁ DEJANDO EL VALOR NULL EN LA NUEVA COLUMNA, SINO NO FUNCIONARÍA EL INSERT PORQUE SE
+                     --PEDIRÁ EL VALOR DEL NUEVO CAMPO.
+
+
+
+--UPDATE --> PARA MODIFICAR DATOS ---> PUEDE MODIFICAR CERO, UNA O VARIAS FILAS (CAMINO FELIZ) O PUEDE DAR ERROR (CAMINO TRISTE)
+update tabla
+set campo1 = valor1,
+    campo2 = valor2,
+    etc
+condiciones  ---> POR LO GENERAL PRESENTA CONDICIONES PARA HACER UN UPDATE
+
+--ejemplo:
+update department
+set location_id = 155
+where name = 'Prueba'
+
+
+
+--DELETE --> PARA BORRAR DATOS, "DAR DE BAJA" --> PUEDE BORRAR CERO, UNA O VARIAS FILAS (CAMINO FELIZ) O PUEDE DAR ERROR (CAMINO TRISTE)
+delete
+from table
+condiciones ---> POR LO GENERAL PRESENTA CONDICIONES PARA VER SI SE BORRA O NO
+
+--ejemplo:
+delete 
+from department
+where department_id = 58
+
+
+--RAZONES PARA QUE SE GENEREN ERRORES:
+-- claves y restricciones (Ejemplo: El department_id NO PUEDE SER VALOR NULO, ademas de que en restricciones indica que es clave primaria por lo que no puede repetirse el deparment_id)
+                -- IMPORTANTE SABER QUE LA CLAVE FORÁNEA DE UNA TABLA ES LA CLAVE PRIMARIA DE OTRA TABLA. CUANDO YO HAGA INSERT O UPDATE EN LA TABLA DEPARTMENT (POR EJEMPLO), EL VALOR QUE LE 
+                -- INDIQUE COMO CLAVE FORÁNEA DEBE EXISTIR Y SER UNA CLAVE PRIMARIA REAL EN LA TABLA EN LA QUE ES CLAVE PRIMARIA.
+
+                -- SI SE QUIERE BORRAR UNA FILA DE LA TABLA DEPARTAMENTOS (POR EJEMPLO), TAMBIÉN ES IMPORTANTE SABER QUE EL DEPARTMENT_ID ES CLAVE FORÁNEA DE, POR EJEMPLO, DE LA TABLA EMPLOYEE,
+                -- POR LO QUE NO PUEDO BORRAR ESA FILA PORQUE DEJARÍA UNA CLAVE FORÁNEA INEXISTENTE EN LA TABLA EMPLOYEE. NO SE PUEDE BORRAR UN DEPARTAMENTO QUE TIENE EMPLEADOS RELACIONADOS.
+
+
+-- LA TABLA AMARILLA CUANDO SALE EL ERROR, LO QUE ESTÁ ENTRE PARÉNTESIS, CUANDO COMIENZA EL SYS_... --> ESO ES LA RESTRICCÓN "ESPECÍFICA" QUE, BUSCANDO EN EL EXPLORADOR DE OBJETOS Y RESTRICCIONES EN LA COLUMNA DEL MISMO 
+-- NOMBRE VA A SALIR ESE MISMO VALOR SYS_... EN ALGÚN LADO Y AHÍ NOS DAREMOS CUENTA DE LA RAZÓN DEL ERROR.
+
+--EN UPDATE Y DELETE ---> SI YO QUIERO BORRAR O MODIFICAR VARIAS FILAS PERO POR ALGUNA RAZÓN, UNA DE LAS FILAS INVOLUCRADAS PRESENTA UNA RESTRICCIÓN DE INTEGRIDAD, GENERÁNDOSE ERROR, NO SE MODIFICA NI SE BORRA NADA.
+--          --> LA SENTENCIA SE CUMPLE PARA TODAS LAS FILAS O NO SE CUMPLE PARA NINGUNA.
+
+
+
+
+
+
+--ERRORES CON INSERT:
+-- ORA-02291: restricción de integridad violada - clave principal no encontrada ---> NO EXISTE LA FOREING KEY (CLAVE FORÁNEA)  (error no-predefinido por el motor --> -2291)
+-- ORA-00001: restricción única violada ---> LA PRIMARY KEY YA EXISTE Y NO SE PUEDE VOLVER A INSERTAR ESA MISMA PRIMARY KEY (CLAVE PRIMARIA) (error predefinido por le motor --> dup_val_on_index)
+-- value_error
+
+--ERRORES CON DELETE: 
+-- ORA-02292: restricción de integridad violada - registro secundario encontrado --> NO SE PUEDE BORRAR UNA FILA DE LA TABLA SI UNA DE SUS COLUMNAS ES UNA CLAVE FORÁNEA DE OTRA TABLA. (CASO DEL DEPARTAMENTO Y LOS 
+--                                                                                   EMPLEADOS RELACIONADOS AL DEPARTAMENTO QUE SE QUIERE BORRAR) error no-predefinido por el moto --> -2292
+--
+
+
+--ERRORES CON UPDATE:
+-- ORA-02291: restricción de integridad violada - clave principal no encontrada ---> NO EXISTE LA FOREING KEY (CLAVE FORÁNEA) (error no-predefinido por el moto --> -2291)
+-- ORA-00001: restricción única violada ---> LA PRIMARY KEY YA EXISTE Y NO SE PUEDE VOLVER A INSERTAR ESA MISMA PRIMARY KEY (CLAVE PRIMARIA) (error predefinido por le motor --> dup_val_on_index) (supongo)
+-- value_error
+
+--OTRA REGLA DE INTEGRIDAD (RESTRICCIÓN DE INTEGRIDAD):
+-- LA CLAVE FORÁNEA NO DEBE SER NULA, TAMPOCO LA CLAVE PRIMARIA.
+
+
+
+--OTRO TIPO DE RESTRICCIONES: --> en el explorador de objetos, en contrains, en las condiciones de búsqueda indica las condiciones que se deben tener en cuenta para cada columna de las tablas para que no salte un error
+                              --> casos de checkconstrains
+
+
+/*
+COMMIT Y ROLLBACK:
+    NOSOTROS VEMOS EL QUERY, PERO NO ESTÁ APLICADO EN LA BASE DE DATOS (EL RESTO NO LO VE)
+        EL COMMIT SE ENCARGA DE GRABAR EL QUERY EN LA BASE DE DATOS
+        EL ROLLBACK SE ENCARGA DE DESHACER EL QUERY (NO APLICADO EN LA BASE DE DATOS)      
+
+*/
+
+
+--BLOQUES ANÓNIMOS:
+
+--Anónimo porque no tiene nombre
+--El código dentro del bloque haga NO persiste en la base de datos (no confundirse con lo que genera el código. Si se hace un insert con un bloque anónimo eso si persiste en la base de datos)
+
+-- presenta 3 áreas:
+
+declare 
+   variables   --> varchar2(numcaracteres) (Strings) - number(numposiciones, num de posiciones de las totales indicadas antes que serán decimales (ejemplo --> number(6,2) el número, de las 6 posiciones totales, las
+                -- últimas 2 posiciones serán decimales, osea 4 posiciones de la parte enteras y 2 para la parte decimal (núumero mayor que se representaría sería 9999,99) )) (numeros enteros, decimales) - date(dd/mm/aaaa) -
+                -- boolean - binaryinteger - plsinteger. LAS VARIABLES SE REPRESENTAS CON LA LETRA V (EJEMPLO: v_nombredevariable).
+   constantes
+   types
+   cursores
+
+   -----        /*Declarativa* -- no obligatoria/ --> se ponen todas las variables, registros, constantes, types, cursores que usaremos en el área de ejecución
+
+begin -- Área de Ejecución --> obligatorio. Si no hay begin ni end no es un bloque anónimo
+  null;  /*ejecucion* -- obligatoria/ --> siempre debe tener algo escrito dentro. si no se hará nada, ponemos null; y listo. */
+
+exception    /*manejo de excepciones * -- no obligatoria/ */
+  -----
+end;  
+
+--EJEMPLO DE BLOQUE ANÓNIMO
+
+declare
+  v_nom varchar2(14);  --declaro la variable v_nom
+begin
+  v_nom  := 'Lucas'; --en el área de ejecución le asigno un valor
+
+  dbms_output.put_line(v_nom);  --con dbms_output.put_line() se imprime el valor de la variable o lo que esté dentro del paréntesis. premite mostrar en la standar output el valor de la variable que se le envía
+                                --como parámetro 
+
+
+end; 
+
+--IMPORTANTE DE LOS BLOQUES ANÓNIMOS: ---> CADA SENTENCIA QUE ESCRIBAMOS SE LE DEBE PONER ; A LO ÚLTIMO.
+
+
+declare
+  v_nombre        varchar2(15) default 'Pedro';
+  v_edad          number(2);
+  v_fecha         date    := sysdate ;       --también se puede asignar valor en el área declarativa directamente
+  v_encontre      boolean;
+  v_precio        number(6,2);
+  c_iva  constant number(3,2)  := 0.21;      -- las constantes se las puede usar para operaciones (suma, resta, multiplicacion, division) pero NO SE DEBE MODIFICAR EL VALOR DE LAS CONSTANTES 
+
+  v_nom           employee.first_name%type;  -- formato de 1 campo  --> variables escalares: la variable toma el tipo de dato de una columna de una tabla de una base de datos --> ventajas: se hace flexible en base
+                                             -- a la columna/campo de  la tabla de la base de datos elegida. Si se modifica algo de la columna, la variable se adaptará.
+
+  vr_emple        employee%rowtype;          -- formato de 1 fila  --> variables compuestas: variables como un registro. la variable funciona como una fila de la tabla, por ejemplo, "employee". Son variables
+                                             -- de estructura de tipo record y las variable se la declara con VR (ejemplo vr_emple)
+
+
+begin
+    --v_edad  := :ingrese_su_edad; ---> VARIABLE DE SUSTITUCIÓN
+    dbms_output.put_line('Edad: '||v_edad );
+
+   v_precio := 100;
+   dbms_output.put_line('precio: '||v_precio ||'+'||v_precio*c_iva);
+    dbms_output.put_line('Nombre: '||v_nombre);
+   v_nombre := 'Ale';
+   dbms_output.put_line('Nombre: '||v_nombre);
+   v_nombre := 'Juan';
+   dbms_output.put_line('Nombre: '||v_nombre);
+   dbms_output.put_line('Fecha: '||v_fecha);
+  null;
+
+  vr_emple.first_name  := 'Pepe';
+  vr_emple.salary      := 1500;
+
+  dbms_output.put_line(vr_emple.first_name||' '||vr_emple.salary);
+
+end;
+
+--EJERCICIO DE BLOQUE ANÓNIMO EN CLASE:
+
+--crear un bloque anónimo en que ingresen por variable de sustitución un id de departamento y un nombre
+--y de de alta un departamento.
+--Solo por este ejercicio no contemplar excepciones (Errores).
+
+declare
+    v_id_departamento       department.department_id%type;
+    v_nom_departamento      department.name%type;
+begin
+    v_id_departamento       := :ingrese_id;
+    v_nom_departamento      := :ingrese_nombre;
+    dbms_output.put_line(v_id_departamento);
+    dbms_output.put_line(v_nom_departamento);
+    insert into department
+    (department_id, name)
+    values (v_id_departamento, v_nom_departamento);
+end;
+
+-- ---------------------------------------------------------------------------------------------CLASE 3---------------------------------------------------------------------------------------------------------------------------------------
+
+-- select into en bloques anónimos: para recuperar información de la base de datos. se asigna lo buscado por el select en una variable.
+        -- IMPORTANTE: EL SELECT INTO DEVUELVE SOLO Y SOLO 1 FILA.
+                --SI TIENE 2 O MAS FILAS PARA DEVOLVER --> DA ERROR/GENERA UNA EXCEPCIÓN --> error predefinido por el motor --> too_many_rows
+                --SI TIENE 0 FILAS PARA DEVOLVER --> DA ERROR/GENERA UNA EXCEPCIÓN --> error predefinido por el motor --> no_data_found
+
+-- IMPORTANTE: EL UPDATE, EL DELETE Y EL INSERT TIENEN LA MISMA SINTAXIS TANTO EL BLOQUES ANÓNIMOS O EN QUERYS NORMALES. 
+
+declare
+    v_nombre  employee.first_name%type;
+    v_salario employee.salary%type;
+begin
+    select first_name, salary
+    into v_nombre, v_salario --donde se guarda el dato q saca de la tabla. si hay más de una variable declarada, se guardará lo de la 1° columna en la 1° variable, lo de la 2° columna en la 2° variable
+    from employee
+    where department_id = 10;--SIEMPRE DEBE HABER UNA CONDICIÓN DONDE SE DEVUELVA UNA SOLA FILA (PEDIR PRIMARYS KEYS POR LO GENERAL PARA EVITAR QUE SE DEVUELVAN 2 O MÁS FILAS)
+                             --no es necesario declarar la variable para el where que se usará como condición.
+    dbms_output.put_line('nombre: ' || v_nombre||' '||v_salario);
+
+exception
+ when no_data_found then --cuando se produzca una excepcion de no encontrar ningún dato...
+    dbms_output.put_line('No existe el empleado buscado'); -- ...mandar el siguiente mensaje
+
+ when too_many_rows then
+      dbms_output.put_line('Existe mas de un empleado en el departamento indicado');
+
+end;
+
+-- excepción del select into del bloque anónimo: ORA-01403: No se ha encontrado ningún dato. (código asociado a la excepción (lo vamos a utilizar para atraparla en el área de excepciones): no_data_found) (0 FILAS DEVUELTAS)
+--                                               ORA-01422: la recuperación exacta devuelve un número mayor de filas que el solicitado (código asociado
+--                                                          a la excepción (lo vamos a utilizar para atraparla en el área de excepciones): too_many_rows) (2 O MÁS FILAS DEVUELTAS)
+--                                               value_error
+
+-- IMPORTANTE: en el select into siempre estará la posibilidad de que se genere la excepción no_data_found, pero la excepción too_many_rows se la puede evitar poniendo en el select into, como condición, la
+--             clave primaria de la fila que estamos buscando. SI HACEMOS LO DE BUSCAR POR PK EN EL WHERE DEL SELECT INTO --> NO SERÁ NECESARIO ATRAPAR LA EXCEPCIÓN TOO_MANY_ROWS YA QUE NUNCA VA A OCURRIR CON ESTO. ES
+--             IMPORTANTE ENTENDER Y COMPRENDER SI ES NECESARIO ATRAPAR LA EXCEPCIÓN O NO (ESTA U OTRAS(supongo que con otras también), TODO LO DEFINE EL CONTEXTO).
+
+
+--EXCEPCIONES
+    --> Área de Excepciones: 
+            --> Cancelar: Cuando el bloque termina en un error y no se termina de ejecutar porque canceló. (Cuando nos tira el mensaje amarillo con los ORA y eso es porque el bloque anónimo CANCELÓ)
+                                    --> se debe atrapar la excepción/error y mandar un mensaje, esto se hará desde el área de excepciones.
+
+
+
+
+--BLOQUES ANÓNIMOS ANIDADOS: pl.sql es un lenguaje prcedural (va de arriba para abajo). Esto significa que si recorriendo el área de ejecución se encuentra una excepción, va al area de excepciones y despues no vuelve
+--                           nuevamente al área de ejecución. PARA SOLUCIONAR ESTO Y PODER BUSCAR ALGO, Y SI NO ENCUENTRO LA INFO HACER ALGO Y DEPUES CONTINUEAR SE PUEDEN ANIDAR LOS BLOQUES.
+
+declare 
+  v_bbbbbb
+begin  --AAA
+  begin --BBB     
+     select  AA     --1)se ejecuta y da error  desde el bloque anónimo B
+     into    
+   exception
+     when no_data_found then
+        XXXXXX                  --2)se va a la excepción desde el bloque anónimo B
+   end;--BBB
+
+   dbms_output BB  --3) se sigue ejecutando, ahora desde el bloque anónimo A
+
+
+end; --AAA
+
+---CONDICIONALES
+IF <condicion> then
+  xxxx;
+end if;
+
+IF <condicion> then
+  xxxx;
+else
+  yyyy;
+end if;
+
+IF <condicion_1> then
+  xxxx;
+elsif  <condicion_2> then
+   yyyy;
+elsif  <condicion_3> then
+    zzzzz;
+else
+    xzxzxzx;
+end if;
+
+--EJEMPLO DE CONDICIONALES:
+
+declare
+  v_edad number(2);
+
+begin
+  v_edad := 15;
+  if v_edad < 18  then
+    dbms_output.put_line ('Secundario');
+  else
+      dbms_output.put_line ('Universidad');
+  end if;
+end;
+
+
+--Ejecicio de clase de condicionales:
+/*
+Desarrollar un bloque anónimo que reciba por variable de sustitución una fecha de nacimiento en el formato dd/mm/yyyy
+calcular la edad y mostrar por pantalla el nivel de escolaridad
+0-2 bebe
+3-5 jardín
+6-12 primaria
+13-17 secundaria
+18-25 universidad
+>25 trabajo
+
+*/
+
+declare
+    v_fecha_nac     date;
+    v_edad          number(2);
+    v_fecha_input   varchar2(10);
+
+begin
+    v_fecha_input     := :ingrese_fecha_nac;
+    v_fecha_nac       := to_date(v_fecha_input, 'dd/mm/yyyy');
+    v_edad            := (sysdate-v_fecha_nac)/365;
+    
+    if(0 <= v_edad and v_edad <= 2)then
+        dbms_output.put_line('bebe');
+    
+    elsif(3 <= v_edad and v_edad <= 5)then
+        dbms_output.put_line('jardín');
+    
+    elsif(6 <= v_edad and v_edad <= 12)then
+        dbms_output.put_line('primaria');
+    
+    elsif(13 <= v_edad and v_edad <= 17)then
+        dbms_output.put_line('secundaria');
+    
+    elsif(18 <= v_edad and v_edad <= 25)then
+        dbms_output.put_line('universidad');
+    
+    else
+        dbms_output.put_line('trabajo');
+    end if;
+
+end;
+
+
+-- CICLOS:
+
+--LOOP: repeticiones: 1..N
+loop
+   xxxx
+   xxxx
+   xxxx
+  exit when <condicion>
+end loop:  
+
+--WHILE: repeticiones: 0..N
+while <condicion> loop
+   xxxx
+   xxxx
+   xxxx
+end loop;
+
+-- ejemplo del WHILE:
+declare
+  v_tope  number(3);
+  v_multiplo  number(3);
+begin
+   v_tope := :ingrese_valor_maximo;
+   v_multiplo := 2;
+   while v_multiplo <= v_tope loop
+      dbms_output.put_line(v_multiplo);
+      v_multiplo := v_multiplo + 2;
+
+   end loop;  
+end; -- pedir por variable de sustitución un número y mostrar por pantalla los números multiplos de 2 mayores o iguales al número ingresado.
+
+
+-- otro ejemplo del WHILE
+declare
+    v_tope        number(3);
+    v_multiplo    number(3);
+   
+begin
+    v_tope    := :ingrese_numero;
+    v_multiplo    := 2;
+    while v_tope >= v_multiplo loop
+        dbms_output.put_line(v_multiplo);
+        v_multiplo := 2 * v_multiplo;
+        
+    end loop;
+
+end; --ingresar número e imprimir las potencias de 2 que sean menor o igual al valor ingresado
+
+
+
+--FOR: repeticiones: X
+for i in [reverse]1..X loop
+  xxxx
+  xxxx
+  xxxx
+end loop;
+
+-- ejemplo del FOR:
+begin
+  for i in reverse 1..5 loop  -- el reverse sirve para que empiece del 5 (en este caso) al número más chico (el 1 en este caso)
+    dbms_output.put_line('posicion: '||i);
+  end loop;
+end ;
+
+
+-- de todos los ciclos se utilizará el que más se adapte al contexto.
+
+
+-- VARIABLES:
+--  tipos de variables:
+            --Escalares: varchar2, date, number, ...
+            --Compuestas --> pueden almacenar más de un dato: Record y collections ()
+
+-- atributo %type --> mismo tipo de dato de una columna de una tabla determinada
+
+-- atributo %rowtype --> mismo tipo de dato que tiene el registro de tabla
+
+
+--TABLAS DE MEMORIA:
+declare
+ type tr_emp is record (
+     emp_id employee.employee_id%type,
+     nombre employee.first_name%type,
+     apellido employee.last_name%type,
+     salario employee.salary%type
+ );
+
+ type tt_emp is table of tr_emp index by binary_integer; -- binary_integer es un tipo de dato del índice de la tabla
+
+ t_emp tt_emp;
+
+begin
+      t_emp(1).emp_id := 8;
+      t_emp(1).nombre := 'Jose';
+
+      t_emp(2).emp_id := 15;
+      t_emp(2).nombre := 'Martin';
+
+      t_emp(28).emp_id := 4;
+      t_emp(28).nombre := 'Pedro';
+
+
+    for i in 1..2 loop
+        dbms_output.put_line(t_emp(i).emp_id || ' '||t_emp(i).nombre);
+    end loop;
+        --dbms_output.put_line('-'||t_emp.next(2)||'-'); --> en caso de que haya registros de tabla que no sean seguidos como t_emp(1), t_emp(2), t_emp(28)
+end;
+
+--VENTAJAS DE LAS TABLAS DE MEMORIA: Al tener la tabla en memoria, sus datos son obtenidos sin procesar. Por lo que se guardarán aquellos datos que utilizaremos mucho.
+
+-- tr_ --> tipo record
+-- tt_ --> tipo tabla
+-- t_  --> tabla
+
+
+-- ATRIBUTOS DE LA TABLA DE MEMORIA
+
+/* indices de ejemplo:
+2
+3
+5
+8
+50
+51
+
+*/
+
+
+-- tabla.count --> 6        (devuelve la cantidad de registros que tiene la tabla)
+-- tabla.exists(5) --> true  (devuelve un true/false de que si tal registro de la tabla existe o no)
+--tabla.exists(9)--> false  (devuelve un true/false de que si tal registro de la tabla existe o no)
+--tabla.first   -->   2     (devuelve el índice del primer registro)
+--tabla.last    -->  51      (devuelve el índice del último registro)
+--tabla.next(8)   -->50       (devuelve el índice siguiente al índice indicado en el paréntesis)
+--tabla.prior(51)--> 50       (devuelve el índice anterior al índice indicado en el paréntesis)
+--tabla.delete(5)   --> (borra el registro con indice 5 (borra el registro del índice indicado en el paréntesis))
+--tabla.trim   --> (borra toda la tabla)
+
+
+
+declare
+ type tr_emp is record (
+     emp_id employee.employee_id%type,
+     nombre employee.first_name%type,
+     apellido employee.last_name%type,
+     salario employee.salary%type
+ );
+
+ type tt_emp is table of tr_emp index by binary_integer;
+
+ t_emp tt_emp;
+ v_idx binary_integer; --> se declara la variable de índice 
+begin
+      t_emp(2).emp_id := 8;
+      t_emp(2).nombre := 'Jose';
+
+      t_emp(5).emp_id := 15;
+      t_emp(5).nombre := 'Martin';
+
+      t_emp(28).emp_id := 4;
+      t_emp(28).nombre := 'Pedro';
+
+      t_emp(50).emp_id := 65;
+      t_emp(50).nombre := 'Luis';
+
+    l_idx  := t_emp.first;
+    while l_idx <= t_emp.last loop
+        dbms_output.put_line(l_idx||' '||t_emp(l_idx).emp_id || ' '||t_emp(l_idx).nombre);
+        l_idx := t_emp.next(l_idx);
+    end loop;
+
+end;  -- ¡¡¡IMPORTANTE!!! ---> ASÍ SE RECORRE LA TABLA USANDO ATRIBUTOS, SOBRETODO SI LOS ÍNDICES NO SON CONTINUOS  <--------------------  ¡¡¡IMPORTANTE!!!
+
+
+-- TABLA DE MEMORIA CON ÍNDICE VARCHAR:
+declare
+ type tr_moneda is record (
+     descr  varchar2(35),
+     cotiz  number(5,2) );
+
+ type tt_moneda is table of tr_moneda index by varchar2(3);
+
+ t_moneda tt_moneda;
+ v_idx varchar2(3);  --> se declara la variable de índice
+begin
+      t_moneda('ARS').DESCR := 'Pesos';
+      t_moneda('ARS').cotiz := 1;
+
+      t_moneda('USD').DESCR := 'Dolar estadounidense';
+      t_moneda('USD').cotiz := 295;
+
+      t_moneda('BRL').DESCR := 'Real Brasilero';
+      t_moneda('BRL').cotiz := 55;
+
+      t_moneda('EUR').DESCR := 'Euro';
+      t_moneda('EUR').cotiz := 296;
+
+
+
+    l_idx  := t_moneda.first;
+    while l_idx <= t_moneda.last loop
+        dbms_output.put_line(l_idx||' '||t_moneda(l_idx).DESCR || ' '||t_moneda(l_idx).cotiz);
+        l_idx := t_moneda.next(l_idx);
+    end loop;
+
+end;
+
+
+-- ---------------------------------------------------------------------------------------------CLASE 4---------------------------------------------------------------------------------------------------------------------------------------
+
+MOTOR
+excepciones pre-definidas
+
+no_data_found  -- comun en select into
+too_many_rows  -- comun en select into
+dup_val_on_index  --cuando se inserta una fila y quedan las primarys keys duplicadas  (común en insert o update(supongo))
+value_error   -- cuando se quiere insertar un valor de un tipo de dato distinto a la que es la variable. o si pones por ej. 10 caracteres cuando el varchar es de 8 caracteres. (comun em select into, insert y update supongo)
+zero_divide   -- dividir por cero
+
+
+no pre-definidas
+-2291 -- no existe padre --> cuando quiero insertar un empleado con un departamento que no existe en la tabla de departamentos (comun en insert y update)
+-2292 -- existen hijos --> cuando quiero borrar un departamento con empleados relacionados a ese departamento. (comun en delete)
+
+
+desde -19999 a -- 0
+
+excepciones del usuario
+desde  -20000 a -49000   -->para errores de la lógica de mi negocio
+
+select *
+from price
+
+declare
+
+  v_dep_name  department.name%type;
+  e_fk        exception;
+  pragma exception_init(e_fk,-2291);
+
+ begin
+   null;
+   select name
+   into v_dep_name
+   from department
+   where department_id = 10;
+
+   dbms_output.put_line(v_dep_name);
+
+ /* insert     
+   into department
+    (department_id, name,location_id)
+   values
+    (10,'Prueba',122); 
+*/
+--  dbms_output.put_line(8/0);
+
+/*update price
+set list_price = 1
+where product_id = 100871;
+*/
+   -- raise_application_error(-20001,'error propio');
+
+exception
+  when no_data_found then
+   dbms_output.put_line('no existe el departamento');
+  when e_fk  then
+   dbms_output.put_line('no existe la localidad indicada');
+ when others then
+   dbms_output.put_line('Se produjo un error inesperado '||sqlerrm);
+   dbms_output.put_line('Codigo  '||sqlcode);
+end ; 
+
+
+
+
+declare
+  v_nom  varchar(5);
+begin 
+  v_nom := 'Martin';
+   dbms_output.put_line('Nombre: '||v_nom);
+exception
+  when value_error then   
+   --dbms_output.put_line('El nombre ingresado es demasiado largo'); --> no se cancelaba, solamente se mostraba un mensaje --> ATENTO A ESTO
+   raise_application_error(-20015,'El nombre ingresado es demasiado largo'); --> así se cancela con un error propio (cuadro amarillo) --> ATENTO A ESTO
+end;
+
+
+
+
+---cursores
+explicitos --> tienen un nombre, están y los conozco
+
+implicitos --> se generan naturalmente sin que hagamos demasiado (con updates y deletes)
+
+
+--CURSORES EXPLÍCITOS --> PASOS:
+-daclarar
+   cursor
+   registro
+-abrir
+-recorrer
+-cerrar
+
+
+--atributos DE CURSORES (IMPLÍCITOS Y EXPLÍCITOS):
+%found      true / false --cursor apuntando a fila?
+%notfound   true / false --cursor NO apuntando a fila?
+%rowcount   numero --Numero de fila en el que estoy parado con el cursor (de la tabla que vamos armando con el cursor, no la de la base de datos)
+%isopen     true / false --cursor abierto?
+%isclosed   true / false --cursor cerrado?
+
+--EJEMPLO DE CURSORES EXPLÍCITOS:
+declare
+  cursor c_cli is
+  select customer_id, name 
+  from customer
+  where salesperson_id = 7789;
+  
+  r_cli c_cli%rowtype;  --> defino que la variable r_cli que la usaremos en fetch sea del mismo tipo que el cursor
+
+begin
+   open c_cli;
+   loop
+     fetch c_cli into r_cli;  --fetch te pone el registro que trae el cursor en una variable propia r_cli (la variable debe ser del mismo tipo que el cursor)
+     exit when c_cli%notfound;
+      
+       dbms_output.put_line(r_cli.customer_id||' '||r_cli.name||' '||c_cli%rowcount);
+   end loop;  
+  -- dbms_output.put_line('antes de cerrer '||c_cli%rowcount);
+   close c_cli;
+   --dbms_output.put_line('despues de cerrer '||c_cli%rowcount);
+end;  
+
+
+-- EJEMPLO DE FORMA MÁS RÁPIDA PARA USAR CURSORES EXPLÍCITOS (USO DEL FOR):
+declare
+  cursor c_cli is
+  select customer_id, name 
+  from customer
+  where salesperson_id = 7789;
+  
+begin
+  for r_cli in c_cli loop    -- declarar el registo y se abre el cursor, 
+       dbms_output.put_line(r_cli.customer_id||' '||r_cli.name||' '||c_cli%rowcount);  -- en cada vuelta del ciclo hace un fetch 
+  end loop;   --- cierra el cursor
+
+end;
+
+-- CURSORES IMPLÍCITOS --> LOS ATRIBUTOS MÁS USADOS SON: %found, %notfound y %rowcount
+
+--EJEMPLO DE CURSORES IMPLÍCITOS:
+begin
+  update employee   --> el cursor implícito se genera con el update (en este caso)
+  set commission = 20
+  where department_id = 95; -- condicion que nos indica que si nos devuelve un valor mayor a 0 existe el departamento, y si da 0 es que no existe.
+  
+  if sql%rowcount  > 0 then
+      dbms_output.put_line('Se modificaron : '|| sql%rowcount ||' filas'   ); --> sql es el cursor implícito -- SIN HACER CICLOS NI NADA, CON CURSOR IMPLÍCITO, HACER UN ROWCOUNT, TE DEVUELVE EL NUMERO DE LA ULTIMA FILA 
+                                                                                                             -- EN LA QUE "SE PARÓ" --> ES LA ÚNICA MANERA DE CONTAR LOS REGISTROS/FILAS QUE SE BORRARON/MODIFICARON
+  else
+    dbms_output.put_line('No existen empleados en el departamento indicado'  );
+  end if;  
+end;  
+
+
+--IMPORTANTE DE LOS CURSORES IMPLÍCITOS: NO HACER ROWCOUNT SI PREGUNTAR FILAS QUE RECORRIÓ EL CURSOR IMPLÍCITO EN LOS SELECT INTO <------ ¡¡IMPORTANTÍSIMO!!
+
+--STORED PROCEDURES (PROCEDIMIENTOS):
+
+-- a diferencia del bloque anónimo, el stored procedure queda almacenado en la base de datos y lleva nombre
+
+-- los stored procedures SOLO PUEDEN DEVOLVER UN SOLO RESULTADO DE SALIDA. Puede tener varios parámetros de entrada pero siempre debe tener una SOLA SALIDA (o ninguna supongo).
+
+
+CREATE OR REPLACE PROCEDURE suma (num1 IN number, num2 IN number, v_total OUT number)
+IS
+--Declarativa
+begin
+    v_total := num1 + num2;
+--Exception
+end;
+/
+
+declare
+    v_num1 number(8) := 5;
+    v_num2 number(8) := 20;
+    v_total number(8) :=0;
+begin
+ suma(v_num1,v_num2,v_total);
+ dbms_output.put_line('Total suma: '|| v_total);
+end;
+/
+
+
+
+
+
+CREATE OR REPLACE PROCEDURE alCubo (numero IN OUT number)
+IS
+--Declarativa
+begin
+    numero := numero * numero;
+--Exception
+end;
+/
+
+
+/* Las variables de párametro del stored procedure pueden ser:
+
+variables de entrada: variable IN tipo_dato
+
+variables de salida: variable OUT tipo_dato
+
+variables de entrada y salida (La variable se la usa cómo parametro de entrada y también devolverá allí la salida): variable IN OUT tipo_dato
+
+*/
+
+
+
+create or replace procedure "INSERT_PRODUCT2"
+(p_id IN product.product_id%TYPE,
+p_nombre IN product.description%TYPE)
+is
+begin
+    insert into product values (p_id,p_nombre);
+    dbms_output.put_line('Producto Ingresado Correctamente');
+exception
+    when dup_val_on_index then
+        dbms_output.put_line('Valores Duplicados!!');
+end;
+
+
+
+
+declare
+   v_num1 number(8) := 5;
+    
+begin
+ alCubo(v_num1);
+ dbms_output.put_line('Total: '|| v_num1);
+end;
+/
+
+
+
+
+select status from all_objects where object_name = 'ALCUBO'; --validar si el procedimiento está valido o no (EL NOMBRE DEL PROCEDIMIENTO EN MAYÚSCULA TODO)
+
+
+-- SI YA TENEMOS EL PROCEDIMIENTO CREADO Y QUEREMOS MODIFICARLO, ES MEJOR MODIFICARLO DESDE EL EXPLORADOR DE OBJETOS MÁS QUE ACÁ ASÍ NOS TIRA DATA DE LOS ERRORES DE UNA MANERA MÁS ESPECÍFICA
+
+begin
+    insert_product2(1055,'Este es un nuevo producto');
+end;
+
+select * from product order by 1;
+
+begin
+    pr_update_id_depto(2);
+end;
+
+select department_id  , name from department order by 1;
+
+
+
+
+
+create or replace procedure "PR_UPDATE_ID_DEPTO"
+(p_id IN department.department_id%TYPE)
+is
+begin
+    update department set name = 'FINANZAS'
+    where department_id = p_id;
+    if sql%rowcount = 0 then
+        dbms_output.put_line('El ID no existe');
+    else 
+        dbms_output.put_line('Departamento actualizado OK');
+    end if;
+end;
+
+
+
+
+--Ejercicio 
+Hacer procedimiento que cree un depto: que me pasen: un nombre y opcionalmente la localidad
+si no tengo localidad pongo el depto en la localidad 122
+y el id de la localidad lo genero internamente como el max que tengo +1 
+
+create or replace 
+procedure "PR_ALTA_DEP"
+                        (pi_nombre IN department.name%type,
+                         pi_loc_id IN department.location_id%type default 122) is  -- el default indica que si yo no le paso ningun valor a tal parámetro cuando llame al
+                                                                                   -- procedimiento, le podrá un valor por defecto, en este caso, 122. Default es cuando no se mandan parámetros, NO NULOS.
+
+  l_max_id  department.department_id%type;
+ 
+  e_fk   exception;
+  pragma exception_init(e_fk,-2291);
+
+begin
+   select nvl(max(department_id),0)
+   into  l_max_id
+   from department;
+
+  insert 
+  into  department
+    (department_id, name, location_id)
+  values
+    (l_max_id+1 , pi_nombre, pi_loc_id);
+
+  dbms_output.put_line('Se inserto correctamente');
+ 
+exception
+  when e_fk then
+    dbms_output.put_line('La localidad es incorrecta');
+  when others then
+   dbms_output.put_line('Se produjo un error inesperado: '||sqlerrm); 
+end;
+
+
+
+
+
+
+
+begin
+ --pr_alta_dep('Pueba 33',123);
+--  pr_alta_dep('Pueba 34'); -- el id de localidad será 122, el valor por default
+  pr_alta_dep('Pueba 35',1);
+
+ end;
+
+
+ select *
+ from department
+ order by department_id desc -- desc significa ordenar de manera descendente, asc sería ordenarlo de forma ascendente.
+
+
+
+-- ---------------------------------------------------------------------------------------------CLASE 5---------------------------------------------------------------------------------------------------------------------------------------
+
+
+-- DE LOS STORED PROCEDURES ---> POR LO GENERAL, EN UN BLOQUE ANÓNIMO O PROCEDIMIENTO, CUANDO SE LLAMA A UNA FUNCIÓN, SI ESTE DA ERROR, POR LO GENERAL, EL PROFE NOS VA A PEDIR QUE EN EL ÁREA DE EXCEPCIONES DE LA FUNCIÓN
+--                               CANCELEMOS CON ERROR PROPIO, Y DESPUES EN EL PROCEDIMIENTO (O BLOQUE ANÓNIMO), EN SU ÁREA DE EXCEPCIONES, ATRAPEMOS EL ERROR PROPIO Y MOSTREMOS UN MENSAJE. <-- ¡¡IMPORTANTE!!
+
+--cursores explícitos con parametros
+
+sintaxis:
+cursor cursor_name (parametros)
+is
+cursor_query
+
+
+--id de departamento, que muestre los empleados que tiene el departamento
+
+create or replace procedure listo_emp
+    (p_depto in department.department_id%type) is
+    cursor c_emp is
+        select first_name || ', ' || last_name nombre
+        from employee
+        where department_id = p_depto;  -- la variable del parámetro del procedimiento actua en la condición del cursor (ESTE EJERCICIO NO USÓ CURSORES CON PARÁMETROS --> ESTO NO ES UN CURSOR CON PARÁMETRO)
+    v_i number :=0;
+    v_x varchar2(1);
+    begin
+        select 'x' into v_x from department where department_id = p_depto; --permite validar si el departamento directamente no existe, ya que si es así, este select into va a cancelar y dar la excepción no_data_found
+        for r_emp in c_emp loop
+            dbms_output.put_line(r_emp.nombre) ;
+            v_i := v_i +1;  -- contador de empleados en el departamento
+        end loop;
+        if v_i = 0 then --pregunta si el departamento no tiene empleados Y NO SI EL DEPARTAMENTO EXISTE. Sin el select into nos podría dar el contador en 0 o por que no hay emple. en el depto o q direct. no existe el depto
+            dbms_output.put_line('Este departamento no tiene empleados') ;
+        end if;
+    exception
+        when no_data_found then
+            dbms_output.put_line('El departamento no Existe ') ;
+end listo_emp;
+/    
+
+
+
+declare
+    v_num number(2) :=11;
+begin
+    listo_emp(v_num);
+end;
+/
+
+
+--Cursores anidados o encadenados
+
+--traer todos los empleados de cada uno de los departamentos (siguiendo con lo del ejercicio anterior)
+
+create or replace procedure lista_emple_p_depto
+is
+    cursor c_dep is select department_id id , name from department order by department_id;
+    cursor c_emp (p_id_dep number) is select employee_id id, first_name nombre , last_name apellido from employee where department_id = p_id_dep; -- ACÁ SÍ SE UTILIZA EL CURSOR CON PARÁMETROS
+    v_i number := 0;
+    begin
+        for r_dep in c_dep loop
+            dbms_output.put_line ('------------------------------------------------');
+            dbms_output.put_line (r_dep.id || ' ' || r_dep.name );
+            dbms_output.put_line ('------------------------------------------------');
+            for r_emp in c_emp (r_dep.id) loop
+                dbms_output.put_line ('    ID: '|| r_emp.id || ' ' || r_emp.nombre || ' ' || r_emp.apellido);
+                v_i := v_i + 1;
+            end loop;
+            if v_i = 0 then
+                dbms_output.put_line ( '    El departamento no tiene empleados');
+            else
+                dbms_output.put_line ( '    Cantidad de Empleados: ' ||v_i);
+            end if;
+            v_i := 0;
+        end loop;
+end lista_emple_p_depto;
+
+begin
+    lista_emple_p_depto;
+end;
+
+
+
+
+create or replace 
+procedure pr_cli_x_ven (pi_vend_id  IN customer.salesperson_id%type) is
+
+  cursor c_cli is 
+  select name, credit_limit
+  from customer 
+  where salesperson_id = pi_vend_id;
+
+   v_limite_desc  varchar2(5);
+   v_cant_cli   number(3) := 0;
+   v_emple      number(1);
+begin 
+   for r_cli in c_cli loop
+      if r_cli.credit_limit <= 4000 then
+        v_limite_desc := 'BAJO';
+      ELSIF r_cli.credit_limit <= 8500 THEN
+        v_limite_desc := 'MEDIO';
+      ELSE
+        v_limite_desc := 'ALTO';
+      END IF;    
+      dbms_output.put_line(r_cli.name||' '||r_cli.credit_limit||' ' ||v_limite_desc);
+      v_cant_cli := v_cant_cli +1;
+   end loop;
+   if v_cant_cli = 0 then
+       select 1
+         into v_emple 
+         from employee
+        where employee_id = pi_vend_id;
+         
+        dbms_output.put_line ('El vendedor tiene clientes asignados');       
+   end if;
+
+exception
+  when no_data_found then
+     dbms_output.put_line ('El vendedor no existe');   
+end;  
+
+
+
+begin
+  pr_cli_x_ven(736);
+end;
+
+select*
+from employee
+
+-- ej de clase que hice yo de cursores y procedimientos
+create or replace procedure "PR_CLI_X_VEND"
+(pi_cod_vend IN customer.salesperson_id%type)
+is
+    cursor c_cli is 
+        select name, credit_limit
+        from customer
+        where salesperson_id = pi_cod_vend;
+
+    v_x         number(1);
+    v_leyenda   varchar2(10);
+    v_i         number(2) := 0;
+begin
+    
+for r_cli in c_cli loop
+    
+    if r_cli.credit_limit <= 4000 then
+       v_leyenda :='BAJO';
+    elsif (4000 < r_cli.credit_limit and r_cli.credit_limit >= 8500 ) then
+        v_leyenda :='MEDIO';
+    else
+        v_leyenda :='ALTO';
+    end if;
+
+    dbms_output.put_line(r_cli.name || ' ' || r_cli.credit_limit || ' ' || v_leyenda);
+    v_i := v_i +1;
+    end loop;
+    if v_i=0 then
+        select 1 into v_x from employee where employee_id = pi_cod_vend;
+    
+         dbms_output.put_line('El vendedor no cuenta con clientes');
+    end if;
+exception
+    when no_data_found then
+    raise_application_error(-20001, 'no existe el vendedor ingresado');
+    
+end; 
+
+declare
+    v_vend_id   employee.employee_id%type  := 	4;
+    e_novend    exception;
+    pragma exception_init(e_novend,-20001);
+begin
+    PR_CLI_X_VEND(v_vend_id);
+
+exception
+    when e_novend then
+        dbms_output.put_line('No existe el vendedor');
+    when others then
+        dbms_output.put_line('Ocurrió un error inesperado' || ' ' || sqlerrm);
+
+
+end;
+
+
+--STORED PROCEDURES --> FUNCIONES
+
+-- al igual que los procedimientos, las funciones quedan almacenadas en la base de datos.
+
+-- a diferencia de los procedimientos, las funciones SIEMPRE RETORNAN ALGO (los procedimientos pueden o no retornar algo, pero las FUNCIONES SI)  <---- ¡¡IMPORTANTE!!
+
+--ventajas de las funciones:
+    -- permite encapsulamiento
+    -- la función se la puede ubicar tanto en la parte donde se brinda en un select normal (no select into) o en la parte condicional (where).
+            -- siempre y cuando dentro de la función no se hagan modificaciones en la base de datos (como insert, update o delete)
+    -- la función también se la puede poner adentro de un dbms_output.put_line(funcion)
+
+--IMPORTANTE DE FUNCIONES: LAS FUNCIONES DEBEN DEVOLVER UN RESULTADO "FELIZ" O CANCELAR CON UN ERROR PROPIO (NO ATRAPAR LA EXCEPCIÓN Y MANDAR UN MENSAJE)
+
+begin
+  dbms_output.put_line (  FU_PROM_SAL(10) );
+end ;
+
+select FU_PROM_SAL(10)
+from dual
+
+
+select department_id , name , FU_PROM_SAL(department_id)
+from department
+
+create or replace function FU_EMP_ID  (pi_nombre    in employee.first_name%type,
+                     pi_apellido in employee.last_name%type)
+            return NUMBER is
+
+  v_emp_id  employee.employee_id%type;
+ 
+
+
+begin
+  select employee_id
+    into v_emp_id
+    from employee
+   where upper(first_name) = upper(pi_nombre)
+     and upper(last_name) = upper(pi_apellido);  --> para la comparación --> siempre en los 2 lados
+
+  return v_emp_id;
+exception
+  when no_data_found then
+    raise_application_error(-20001,'Empleado no existe');
+  when too_many_rows then
+    raise_application_error(-20002,'Existe mas de un empleado con el mismo nombre y apellido');
+  when others then
+    raise_application_error(-20003,'Error insesperado al validar empleado '||sqlerrm); -- acá irá el when others y no en el bloque anónimo ni en un procedimiento <-- ¡¡IMPORTANTE!!
+
+end;
+
+
+create or replace procedure PR_ALTA_EMP   (pi_nombre   IN employee.first_name%type,
+                                           pi_apellido IN employee.last_name%type,
+                                           pi_dep_id   IN department.department_id%type) is
+l_max_id  number(4);
+l_emp_id  number(4);
+
+e_emp_no_existe  exception;
+pragma exception_init(e_emp_no_existe,-20001);
+e_emp_duplicado  exception;
+pragma exception_init(e_emp_duplicado,-20002);
+e_depto_no_exis  exception;
+pragma exception_init(e_depto_no_exis,-02291);
+
+begin
+  begin
+   l_emp_id := fu_emp_id(pi_nombre,pi_apellido);
+   dbms_output.put_line('El empleado ya existe');   
+   exception
+     when e_emp_no_existe then
+        begin
+
+        select max(employee_id)+1
+        into l_max_id
+        from employee; 
+
+            insert 
+            into employee
+            (employee_id, first_name, last_name, department_id)
+            values   
+            (l_max_id,pi_nombre,pi_apellido,pi_dep_id);
+        exception
+            when   e_depto_no_exis then
+             dbms_output.put_line('No existe el departamento'); 
+        end;
+     when  e_emp_duplicado then
+         dbms_output.put_line('El empleado ya existe y esta duplicado');  
+     when others then
+        dbms_output.put_line('Error inesperado');  
+
+         
+    end;       
+end;
+
+
+
+
+begin
+  dbms_output.put_line (  FU_emp_id('Ale','Perez') );
+end ;
+
+
+select *
+from employee
+
+insert 
+into employee
+  (employee_id, first_name, last_name, department_id)
+values   
+   (3001,'Ale','Perez',10)
+
+
+
+ begin
+ PR_ALTA_EMP ('juan','Perez',10);
+ end;  
+
+
+
+
+ select *
+ from employee
+
+
+
+
+ -- ---------------------------------------------------------------------------------------------CLASE 6---------------------------------------------------------------------------------------------------------------------------------------
+
+
+create or replace function valida_cliente
+  (pi_nombre customer.name%type)
+  return customer.customer_id%type 
+  as
+
+  v_cli_id customer.customer_id%type;
+  begin
+    select *
+    into v_cli_id 
+    from customer
+    where name=pi_nombre;
+    return v_cli_id;
+  end;
+
+
+  --bloque para probar funcion
+
+ --1era prueba, Todo OK
+  declare
+    cli_id number(6);
+  begin
+    cli_id := valida_cliente('JOCKSPORTS');
+    dbms_output.put_line(cli_id);
+  end;
+
+ 
+ --2da prueba, cambio por ALEJANDRO Y Capturo el error y envio un mensaje propio
+
+declare
+    cli_id number(6);
+    e_cli_no_ex exception;
+    pragma exception_init (e_cli_no_ex,-20001);
+  begin
+    cli_id := valida_cliente('ALEJANDRO');
+    dbms_output.put_line(cli_id);
+  --OJO!!! ESTO ESTA MAL -> no se va a ejecutar nunca pq si hay error va al area de excepcion, no sigue por aca
+  /*if cli_id is not null then
+    dbms_output.put_line (cli_id);
+  else
+    dbms_output.put_line (sqlerrm);
+  end if;
+  */
+  exception
+    when e_cli_no_ex then
+      dbms_output.put_line('Cliente no existe!!!!');
+  end; 
+
+--ej Practica 4 - ej 5 -- como ver el null
+--  dbms_output.put_line('-'||q_credit(0)||'-');
+
+--ejercicio de practica:
+
+/*
+Crear un procedimiento para dar de alta un departamento
+Recibe por parametros el nombre y el id de localidad.
+==>Devuelve por parametro en id de nuevo departamento creado.
+Para generar el nuevo id, se le suma 1 al maximo existente en la tabla
+CONTEMPLAR TODOS LOS ERRORES POSIBLES!!
+NUNCA CANCELAR!!!!
+*/
+
+--el que hice yo
+create or replace procedure "PR_ALTA_DEPTO"
+    (pi_nom_depto IN department.name%type,
+    pi_id_loc IN department.location_id%type,
+    po_id_depto OUT department.department_id%type)
+
+is
+     v_max_depto_id  department.department_id%type;
+    
+    e_fk        exception;
+    pragma exception_init(e_fk,-2291);
+begin
+    select max(department_id)
+    into v_max_depto_id
+    from department;
+    
+
+    insert into 
+    department(department_id, name, location_id)
+    values(v_max_depto_id+1, pi_nom_depto, pi_id_loc);
+
+    po_id_depto := v_max_depto_id+1;
+    dbms_output.put_line('Se ha insertado el departamento correctamente');
+        
+exception     
+    when e_fk then
+        dbms_output.put_line('no existe la localidad');
+    when others then
+        dbms_output.put_line('error inesperado' || ' ' || sqlerrm);
+       
+        
+end;
+
+declare
+v_nuevo_id    department.department_id%type;
+begin
+PR_ALTA_DEPTO('PRUEBA4', 122, v_nuevo_id);
+
+end;
+
+select *
+from department
+where department_id = 47
+
+delete
+from department
+where department_id = 47
+
+
+
+
+
+
+
+--el que hizo el profe:
+CREATE OR REPLACE PROCEDURE alta_dep
+  (pi_name in department.name%type,
+   pi_loc in department.location_id%type,
+   po_dep_id out department.department_id%type) 
+IS
+
+l_id_max department.department_id%type;
+e_fk    exception;
+pragma exception_init (e_fk,-2291);
+
+BEGIN
+    select nvl(max(department_id),0) 
+    into l_id_max
+    from department;
+   
+     INSERT into department 
+     VALUES ((l_id_max + 1), upper(pi_name), pi_loc);
+     Dbms_Output.Put_Line('Se ha insertado un departamento');
+     po_dep_id := l_id_max;
+
+ EXCEPTION
+    when e_fk then
+        dbms_output.put_line('La Localidad es Incorrecta');
+    when Dup_val_on_index then    
+        dbms_output.put_line ('ERROR: Clave duplicada');
+    when others then
+        dbms_output.put_line('Error Inesperado: '|| sqlerrm);
+END; 
+
+--funcion nvl
+--usa dos parametros 
+--nvl (param1,param2)
+--param1 y param2 tienen q ser del mismo tipo
+--si param1 NO is null -> devuelve el param1 ->> Else devuelve el param2
+
+
+--Ejercicio.
+--crear un procedimiento lista productos
+--p cada producto, mostrar:
+-- prod_id desc  -fecha de la ultima venta-
+-- historial de precios (fecha desde  fecha_hasta   p_min   p_lista)
+--ordenado por vigencia
+--en caso de q nunca se haya vendido, informarlo, en lugar de poner la fecha
+
+
+
+
+ select  nvl(  to_char( max(order_date) )    , 'No vendido')     --- *--   nvl(to_char(max(sales_order.ORDER_DATE)), 'No vendido') 
+--        into v_last_sell 
+        from item i, 
+             sales_order so
+        where i.product_id = 1008--r_productos.product_id
+          and i.order_id = so.order_id;
+
+
+
+
+begin
+  pr_lista_productos;
+end;   
+
+
+
+procedimiento que recibe por parametro
+id_cliente
+id_de_vendedor
+
+actualiza el vendedor del cliente
+NO CANCELAR
+
+incidar si
+- si se actualizo correctamente
+- cliente no exste
+- vendedor no existe
+- cualquier otro error
+
+
+begin
+  PR_MODIFICA_VENDEDOR(199,752);
+ end; 
+
+
+ select  *
+ from customer
+ 100  7844 --  7521
+    
+
+
+declare
+  f_1  date;
+  f_2 date;
+begin
+  f_1  :=  to_date('01-04-2020','dd-mm-yyyy');
+  f_2  :=  to_date('01-06-2020','dd-mm-yyyy');
+
+  if f_1 > f_2 then
+    dbms_output.put_line('gano');
+  else
+    dbms_output.put_line('perdio');
+  end if;
+end;
+
+
+
+
+select *
+from price
+where product_id = 100860
+
+
+
+
+
+4)   Realizar un bloque anónimo que muestre todas las órdenes de compra y sus items para una fecha determinada
+
+Recibirá por variable de sustitución una fecha
+
+·        En caso que el no haya ordenes para la fecha indicada mostrar el mensaje correspondiente
+
+·        Ordenar por nombre de cliente
+
+·        Mostrar de la siguiente manera:
+
+
+
+Fecha: dd/mm/aaaa
+
+
+
+Id  Fecha      Total Cliente
+
+11 1/1/2022    $44 Aaaaaaaaa
+
+       Ítem_id   producto (desc) precio  cant  Total
+
+            1         xxxxx                  $10       2    $20
+
+            2         yyyyy                  $ 8       3    $24
+
+     
+
+
+
+Id  Fecha      Total Cliente
+
+12 5/1/2022  $82 Bbbbbbb
+
+       Ítem_id   producto (desc) precio  cant  Total
+
+            1         zzzzzz                $41       2    $82
+
+
+
+Total ventas: 2
+
+
+
+Aclaraciones:
+
+·       Manejar todos los errores adecuadamente.
+
+·       Evitar accesos innecesarios a la base
+
+
+
+
+
+
+
+
+declare
+cursor c_sord is
+  select order_id, order_date, total, customer_id
+  from sales_order;
+cursor c_item (order_id sales_order.order_id%type) is
+  select item_id, description, actual_price, quantity, total
+  from item i, product p
+  where i.product_id = p.product_id;  
+begin
+for r_sord in c_sord loop   
+       dbms_output.put_line ('ID'|| '      ' || 'FECHA'|| '      ' || 'TOTAL'|| '      ' || 'CLIENTE');
+            dbms_output.put_line(r_sord.order_id||'    '||r_sord.order_date||'    '||r_sord.total || '    ' || r_sord.customer_id);
+            dbms_output.put_line ('-----------------------------------------------------------------------------------------------');
+    for r_item in c_item (r_sord.order_id) loop
+            dbms_output.put_line ('     Ítem_id'|| '      ' || 'producto (desc)'|| '      ' || 'precio'|| '      ' || 'cant'|| '      ' || 'total');
+                dbms_output.put_line('      '||r_item.item_id||'        '||r_item.description||'       ' ||r_item.actual_price || '         '  ||r_item.quantity || '       ' || r_item.total);
+                dbms_output.put_line ('-----------------------------------------------------------------------------------------------');
+               
+            end loop;
+  end loop;   
+
+--exception
+end;
+
+
+
+
+
+create or replace procedure lista_emple_p_depto
+is
+    cursor c_dep is select department_id id , name from department order by department_id;
+    cursor c_emp (p_id_dep number) is select employee_id id, first_name nombre , last_name apellido from employee where department_id = p_id_dep; -- ACÁ SÍ SE UTILIZA EL CURSOR CON PARÁMETROS
+    v_i number := 0;
+    begin
+        for r_dep in c_dep loop
+            dbms_output.put_line ('------------------------------------------------');
+            dbms_output.put_line (r_dep.id || ' ' || r_dep.name );
+            dbms_output.put_line ('------------------------------------------------');
+            for r_emp in c_emp (r_dep.id) loop
+                dbms_output.put_line ('    ID: '|| r_emp.id || ' ' || r_emp.nombre || ' ' || r_emp.apellido);
+                v_i := v_i + 1;
+            end loop;
+            if v_i = 0 then
+                dbms_output.put_line ( '    El departamento no tiene empleados');
+            else
+                dbms_output.put_line ( '    Cantidad de Empleados: ' ||v_i);
+            end if;
+            v_i := 0;
+        end loop;
+end lista_emple_p_depto;
+
+begin
+    lista_emple_p_depto;
+end;
+
+ -- ---------------------------------------------------------------------------------------------CLASE 7 y 8---------------------------------------------------------------------------------------------------------------------------------------
+
+--PAQUETES 
+
+    --Encapsular procedimientos y funciones y precentan ventajas por sobre lo que fuimos aprendiendo.
+        --las herramientas que fuimos aprendiendo las aplicaremos acá
+        --trabajar con una parte publica y una parte privada a nivel usuarios
+        --empaquetar cosas dentro de este package, y determinar los privilegios de los usuarios
+
+        --Ventajas:
+            -- Modularización: Cada uno trabaja con un modulo particular.
+            -- Sobrecarga: Tener dentro de un package diferentes procedimientos con el mismo nombre, al recibir parámetros diferentes. De acuerdo el parametro que reciba, sabe que procedimiento se está llamando.
+                            -- No se puede tener 2 procedimientos o funciones con el mismo nombre y que por ejemplo, uno tenga de parametro el nombre del empleado y el 
+                            -- otro procedimiento tiene de parámetro el apellido del empleado ya que en bajo nivel ambos son varchar y no generan la diferencia de tipo y/o
+                            -- cantidad que pide la sobrecarga.
+                            -- Son procedimientos/ funciones con distinto parámetros pero que resuelven lo mismo.
+            -- Oculta detalles de implementación.
+            -- Mayor agilidad a la hora de trabajar.
+
+
+
+    --Estructura del paquete:
+        --Especificación: lista de procedimientos, funciones, estructuras del paquete, nombre y parametros que se reciben y que se devuelven. SE PONE SOLAMENTE EL ENCABEZADO DE LA FUNCIÓN O PROCEDIMIENTO PERO NO SE
+                        --DESARROLLA.
+        --Body: lógica del páquete. DONDE SE DESARROLLA LA FUNCIÓN O PROCEDIMIENTO.
+    
+    --Los package se almacenan en la base de datos separadamente. La especificación por un lado y el body por el otro.
+
+    --Sintaxis de un Paquete:
+
+
+CREATE OR REPLACE PACKAGE DEMO IS
+    G_iva number  :=21; --definida una variable global (VA A ESTAR DISPONIBLE Y LA VA A PODER ACCEDER CUALQUIERA DENTRO DEL BODY)
+    procedure Anual_comision; --definido un procedimiento global
+    procedure Informe (Fecha IN Date default sysdate) -- procedimiento público
+    end; --ESPECIFICACIÓN DEL PAQUETE --> Parte pública
+create or replace package body demo is
+    --> Parte privada --> en el cuerpo vas a tener las firmas de procedimientos y funciones y los tenes que tener desarrollados en el body.
+    --> Declaraciones privadas
+    --> Definición de subprogramas privados
+    --> Definición de subprogramas públicos
+
+    
+    cursor c_emp is select * from employee order by last_name; --cursor privado c_emp
+
+    function iva_de (n in number) return number is --funcion privada iva_de
+        begin
+            return (n * g_iva, 2);
+            end iva_de;
+
+    procedure Anual_comision is
+        begin
+            for emp_recg in c_emp loop
+                if iva_de (emp_reg.salary) then
+                    --condicion
+                end if;
+                    --upgrade employee
+
+    end Anual_comision;
+
+    procedure Informe (Fecha IN Date default sysdate) is
+    begin
+            --
+    end Informe;
+end;
+
+
+
+
+
+-- ¡¡¡IMPORTANTE!!! ---> Los procedimientos o funciones definidas en la especificación deben tener el mismo nombre y parámetros en el body cuando son desarrollados.
+
+                    --> podemos tener cuerpo sin body pero NO body sin cuerpo.
+                    --> podemos tener declaradas en la especificación: constantes, tipos, excepciones, variables.
+                    --> si se tiene un procedimiento declarado en la especificación lo tengo que tener desarrollado si o si en el body. Pero puedo haber casos en donde solo
+                    --  tenga especificación, pero no tenga body. (casos en donde no se declararon procedimientos y funciones pero si consantes, excepciones, tipos, etc).
+                    
+                    --> Las variables privadas son las que se declaran en el cuerpo.
+                            --> Y PARA QUE SEAN GLOBALES A TODO EL CUERPO DEBEN ESTAR ARRIBA DE TODO EN EL CUERPO.
+
+
+-- Recomendación: Dentro de un package, donde va a haber muchos procedimientos y muchas funciones, es recomendable indicar en el end que cierra el procedimiento o la función el nombre de la función o procedimiento.
+
+-- Dentro de un procedimiento se trabaja con:
+    -- variables privadas o locales: La variable que está definida en cada subprograma (¿o en el body?)
+    -- variables públicas o globales: La variable que está declarada en la especificación, disponible para todo el package
+
+
+
+/*
+  La finalidad es agrupar una serie de elementos
+
+
+  Un PKG tiene dos partes: 1 cabecera (especification) y 1 cuerpo (body)
+  En la cabecera -> Procedimientos, Funciones y Estructuras que va a contener el PKG
+                    Se mencionan el Nom de Proc o Func y si recibe o devuelve algun parametro
+  En el Body -> La logica del Pkg
+
+  Para Guardarlo: 1ero marco la cabecera y la ejecuto y luego hago lo mismo con el cuerpo
+  Para eliminar un Pkg: 
+                  Para eliminar la especificación y el cuerpo: DROP PACKAGE nombre_paquete;
+		              Para eliminar sólo el cuerpo: DROP PACKAGE BODY nombre_paquete;
+
+Ventajas:
+-	Modular
+- Flexibilidad
+-	Seguridad
+-	Performance
+-	Permite "sobrecarga de funciones " (Overloading)
+     	--sobrecargar: 
+		  Dos formas distintas q tienen el mismo nombre de Procedimiento pero difieren en los parametros. 
+	ejemplo:
+		--En la Especificacion
+		  procedure consulta_empleado ( p_id employee.employee_id%type);
+		  procedure consulta_empleado ( p_apellido employee.last_name%type);
+
+		--En el Body va el desarrollo de los procedimientos
+
+		--ejecucion:
+		paquete.consulta_empleado(101);
+		paquete.consulta_empleado('LOPEZ');
+
+  --------------------------------
+
+
+--Sintaxis:
+
+Creación de la Especificación:
+ CREATE OR REPLACE PACKAGE  nombrePKG IS
+    v_varpub number;
+ 		c_conspub constant varchar2(20) := 'hola';
+    e_miexcepcion exception;
+    pragma exception_init (e_miexcepcion , -20100);
+    cursor c_emp is select * from employee;
+    procedure p_procpub (p_nom varchar2);
+    function f_priv(p_palabra varchar2) return varchar2;
+ END [nombrePKG];
+
+
+--Creación del cuerpo: 
+CREATE OR REPLACE PACKAGE BODY nombre IS
+		Declaraciones privadas
+		Definición de subprogramas privados
+		Definición de subprogramas públicos
+	END [nombre];
+*/
+
+--Ejemplo:
+	CREATE OR REPLACE PACKAGE DEMO IS
+	  G_iva  number := .21;           -- variable global
+	  PROCEDURE Actual_comision ;    -- procedimiento público
+	  PROCEDURE Informe (Fecha  IN  Date default sysdate);  -- proc. público
+	END DEMO;
+
+
+
+--===================================================================================================
+
+create or replace package PA_EMPLEADOS as
+
+PROCEDURE pr_modif_salario (pi_nombre   employee.first_name%type,
+                            pi_apellido employee.last_name%type,
+                            pi_salario  employee.salary%type) ;
+
+PROCEDURE pr_modif_salario (pi_emp_id  employee.employee_id%type,
+                            pi_salario employee.salary%type) ;
+end;
+
+
+
+create or replace package body "PA_EMPLEADOS" is
+
+e_emp_noex exception;
+e_emp_dupl exception;
+e_emp_otro exception;
+pragma exception_init(e_emp_noex,-20001);
+pragma exception_init(e_emp_dupl,-20002);
+pragma exception_init(e_emp_otro,-20003);
+
+/***************************************************/
+function fu_emp_id(pi_nombre   employee.first_name%type,
+                   pi_apellido employee.last_name%type)
+                 return  employee.employee_id%type is
+  l_emp_id employee.employee_id%type;
+begin
+
+  select employee_id
+    into l_emp_id
+    from employee
+   where upper(first_name) = upper(pi_nombre)
+     and upper(last_name) = upper(pi_apellido);
+
+   return l_emp_id;
+
+  exception
+    when no_data_found then
+      raise_application_error(-20001,'EMPLEADO NO EXISTE');
+    when too_many_rows then  
+      raise_application_error(-20002,'mas de un empleado con el mismo nombre');
+    when others then
+      raise_application_error(-20003,'error inesperado '||sqlerrm);
+        
+  end;                 
+
+/***************************************************/
+
+
+PROCEDURE pr_modif_salario (pi_emp_id  employee.employee_id%type,
+                            pi_salario employee.salary%type) 
+as
+begin
+   update employee
+   set salary = pi_salario
+   where employee_id = pi_emp_id;
+ 
+   if sql%rowcount = 1 then  
+      dbms_output.put_line('El salario se modifico exitosamente');
+   else
+      dbms_output.put_line('El empleado no existe');
+   end if;
+
+end PR_MODIF_SALARIO;
+/**********************************************/
+PROCEDURE pr_modif_salario (pi_nombre   employee.first_name%type,
+                            pi_apellido employee.last_name%type,
+                            pi_salario  employee.salary%type) is
+  l_emp_id employee.employee_id%type;
+
+
+
+begin
+
+   l_emp_id := fu_emp_id (pi_nombre,pi_apellido);
+   pr_modif_salario(l_emp_id,pi_salario);
+exception
+  when e_emp_noex then
+    dbms_output.put_line('empleado no existe');
+  when e_emp_dupl then
+    dbms_output.put_line('mas de un empleado con el mismo nombre');
+  when e_emp_otro then
+    dbms_output.put_line('error inesperado el buscar el empleado '||sqlerrm);
+
+ end;
+ /****************************************************/ 
+
+
+
+
+
+/*one time only*/
+begin
+  dbms_output.put_line('Primera vez');
+end ; --bloque optativo que se pone al final del body, bloque anonimo del package (usa el en del package). Todo lo que esté adentro del bloque se ejecuta
+    -- solamente la primera vez que invoque al package.
+            -- usado para almacenar una tabla de memoria. (va a ser mas rápido ir a la tabla de memoria que a la base (en disco) al realizar una consulta)
+                    -- en caso de crear una tabla de memoria, todo lo que es type tr is record, type tt y table of tr y t tt_ se lo pone arriba de todo en 
+                    -- declaraciones privadas globales. (¿ También la declaración del cursor que recorrerá la tabla se hace en la parte de arriba del body ?).
+
+--1:24 clase 8 Cómo recorrer una tabla y cargarla en memoria con el bloque one time only:
+        -- Bulk collect: EL ID ES PUESTO AUTOMÁTICAMENTE POR EL MOTOR.
+        -- Más rápida y sencilla de hacer. Si yo quiero una información de una posición en específico tengo que recorrer posición por posición y preguntar por fila
+        -- si el id de la tabla contiene la posicion que yo busco y si es así obtengo toda la info de esa posición.
+                -- El select into, pero como es de mucha filas, into(dentro de) una tabla, se usa el bulk collect
+                -- Si yo recorro toda la tabla, del primer a último registro, usar bulk collect. (depende de como acceda a la info)
+
+
+        -- Con cursores: LOS ID LOS ADMINISTRO YO.  
+        -- La ventaja que tiene es que yo ya tengo dentro del id el valor que yo quiero (como el id del departamento), permitiendo acceder a la posición 20
+        -- y me va a traer la información del departamento 20.
+        -- Si yo necesito acceder a info puntal de un registro, se usa el método con cursores (depende de como acceda a la info)
+    -- 1:48 clase 8
+                    
+--¿alias a las funciones de grupo del cursor 1:44 clase 8?
+
+
+--procedimiento que liste todos los departamentos (id, nom, cant emp y prom sal) y por cada departamento que muestre el nombre y ape de cada empleado.
+
+                --CONTENIDO PACKAGE CLASE 8:
+create or replace package PA_EMPLEADOS as
+
+PROCEDURE pr_modif_salario (pi_nombre   employee.first_name%type,
+                            pi_apellido employee.last_name%type,
+                            pi_salario  employee.salary%type) ;
+
+PROCEDURE pr_modif_salario (pi_emp_id  employee.employee_id%type,
+                            pi_salario employee.salary%type) ;
+
+PROCEDURE pr_muestra (pi_nombre  varchar2);     
+procedure pr_lista_dep;
+
+end;
+
+
+create or replace package body "PA_EMPLEADOS" is
+
+e_emp_noex exception;
+e_emp_dupl exception;
+e_emp_otro exception;
+pragma exception_init(e_emp_noex,-20001);
+pragma exception_init(e_emp_dupl,-20002);
+pragma exception_init(e_emp_otro,-20003);
+
+type tr_depto is record (p_id_depto department.department_id%type,
+                         p_name     department.name%type,
+                         p_count_emple    number,
+                         p_prom_salary    number);
+
+type tt_dep is table of tr_depto index by binary_integer;
+
+t_dep tt_dep;
+
+cursor c_depto is 
+    select d.department_id , d.name , count(e.employee_id) cant, avg(e.salary) prom
+    from department d, employee e
+    where d.department_id = e.department_id
+    group by d.department_id , d.name;
+
+--idx number
+
+/***************************************************/
+function fu_emp_id(pi_nombre   employee.first_name%type,
+                   pi_apellido employee.last_name%type)
+                 return  employee.employee_id%type is
+  l_emp_id employee.employee_id%type;
+begin
+
+  select employee_id
+    into l_emp_id
+    from employee
+   where upper(first_name) = upper(pi_nombre)
+     and upper(last_name) = upper(pi_apellido);
+
+   return l_emp_id;
+  exception
+    when no_data_found then
+      raise_application_error(-20001,'EMPLEADO NO EXISTE');
+    when too_many_rows then  
+      raise_application_error(-20002,'mas de un empleado con el mismo nombre');
+    when others then
+      raise_application_error(-20003,'error inesperado '||sqlerrm);
+        
+  end;                 
+
+/***************************************************/
+
+
+PROCEDURE pr_modif_salario (pi_emp_id  employee.employee_id%type,
+                            pi_salario employee.salary%type) 
+as
+begin
+   update employee
+   set salary = pi_salario
+   where employee_id = pi_emp_id;
+ 
+   if sql%rowcount = 1 then  
+      dbms_output.put_line('El salario se modifico exitosamente');
+   else
+      dbms_output.put_line('El empleado no existe');
+   end if;
+
+end PR_MODIF_SALARIO;
+/**********************************************/
+PROCEDURE pr_modif_salario (pi_nombre   employee.first_name%type,
+                            pi_apellido employee.last_name%type,
+                            pi_salario  employee.salary%type) is
+  l_emp_id employee.employee_id%type;
+
+
+
+begin
+
+   l_emp_id := fu_emp_id (pi_nombre,pi_apellido);
+   pr_modif_salario(l_emp_id,pi_salario);
+exception
+  when e_emp_noex then
+    dbms_output.put_line('empleado no existe');
+  when e_emp_dupl then
+    dbms_output.put_line('mas de un empleado con el mismo nombre');
+  when e_emp_otro then
+    dbms_output.put_line('error inesperado el buscar el empleado '||sqlerrm);
+
+ end;
+ /****************************************************/ 
+
+PROCEDURE pr_muestra (pi_nombre  varchar2) is
+begin
+  dbms_output.put_line(pi_nombre);     
+ end; 
+ /****************************************************/ 
+
+procedure pr_lista_dep is
+
+ cursor c_emp  (p_dep_id department.department_id%type) is --cursor que toma todos los empleados que tiene el depto indicado como parámetro.
+   select first_name, last_name
+   from employee
+   where department_id = p_dep_id;
+   
+
+begin
+ 
+   for i in 1..t_dep.count loop    -- recorro la tabla record (con bulk collect) con cursor anidado.
+     dbms_output.put_line  (t_dep(i).p_id_depto ||' '||t_dep(i).p_name||' '||t_dep(i).p_count_emple||' '||t_dep(i).p_prom_salary);
+     for r_emp in c_emp (t_dep(i).p_id_depto) loop
+        dbms_output.put_line ('     '|| r_emp.first_name||' '||r_emp.last_name);
+     end loop;      
+     dbms_output.put_line ('  ');
+
+
+   end loop;
+
+    /*
+        idx := t_dep.first --> primer índice de mi tabla
+       
+        while idx <= t_dep.last loop  -- recorro la tabla record (con cursor).
+            dbms_output.put_line(idx || ' ' || t_dep(idx).p_id_depto ' ' || t_dep(idx).p_name || ' ' || t_dep(idx).p_count_emple || ' ' || t_dep(idx).p_prom_salary);
+            idx := t_dep.next(idx);
+        end loop;
+
+    */
+
+end;
+
+
+ /****************************************************/ 
+
+/*one time only*/
+begin
+
+  select d.department_id , d.name , count(e.employee_id) , avg(e.salary)    -- Cargo la tabla record en memoria con el bloque one time only (con bulk collect)
+    bulk collect into t_dep
+    from department d, employee e
+    where d.department_id = e.department_id
+    group by d.department_id , d.name
+    order by d.department_id;
+
+    /*
+        for r_dep in c_depto loop                                             -- Cargo la tabla record en memoria con el bloque one time only (con cursor)
+        t_dep(r_dep.department_id).p_id_depto       := r_dep.department_id;
+        t_dep(r_dep.department_idi).p_name          := r_dep.name;
+        t_dep(r_dep.department_id).p_count_emple    := r_dep.cant;
+        t_dep(r_dep.department_id).p_prom_salary    := r_dep.prom;
+        end loop;
+    */
+
+  dbms_output.put_line('Primera vez');
+end ;
+
+
+
+-- ---------------------------------------------------------------------------------------------CLASE 9---------------------------------------------------------------------------------------------------------------------------------------
+
+/*
+Ejercicio: paquete ordenes 
+  procedure reciba id cliente -> id de orden  (sales_order -id_order-cliente-fecha de entrega(sysdate+7))
+
+*/
+
+
+create or replace package P_ORDENES as
+procedure p_id_orden (
+   p_id_cli sales_order.customer_id%type ,
+   p_fech_entrega sales_order.ship_date%type,
+   p_id_order out sales_order.order_id%type);
+end P_ORDENES;
+
+
+create or replace package P_ORDENES as
+procedure p_id_orden (
+   p_id_cli sales_order.customer_id%type ,
+   p_fech_entrega sales_order.ship_date%type,
+   p_id_order out sales_order.order_id%type);
+
+ procedure pr_alta ( pi_id_cli       sales_order.customer_id%type ,
+                     po_id_order out sales_order.order_id%type);
+  
+ procedure pr_alta_item(pi_id_order IN sales_order.order_id%type,
+                        pi_prod_id  IN product.product_id%type,
+                        pi_cantidad IN item.quantity%type );
+
+procedure pr_alta_item(pi_id_order IN sales_order.order_id%type,
+                        pi_prod_desc  IN product.description%type,
+                        pi_cantidad IN item.quantity%type );
+
+end P_ORDENES;
+
+
+
+
+create or replace package body P_ORDENES as
+  
+  function fu_prod_id(pi_prod_desc in product.description%type)
+                    return product.product_id%type is
+      
+        l_prod_id product.product_id%type;
+      begin
+
+          select product_id
+          into l_prod_id
+          from product
+          where upper(description) = upper(pi_prod_desc);
+
+          return l_prod_id;
+
+          exception
+            when no_data_found then
+              raise_application_error(-20001,'Producto No Existente ');
+            when too_many_rows then  
+              raise_application_error(-20002,'Mas de un producto con el mismo nombre ');
+            when others then
+              raise_application_error(-20003,'error inesperado '||sqlerrm);
+            
+  end fu_prod_id;  
+  
+  procedure p_id_orden (
+     p_id_cli sales_order.customer_id%type ,
+     p_fech_entrega sales_order.ship_date%type,
+     p_id_order out sales_order.order_id%type)
+    is
+    v_order_id sales_order.order_id%type;
+    begin
+    select order_id
+    into v_order_id 
+    from sales_order
+    where customer_id = p_id_cli 
+    and ship_date = p_fech_entrega;
+  p_id_order := v_order_id;
+  exception
+    when no_data_found then
+      dbms_output.put_line('No Existen Ordenes para ese ID');
+    when too_many_rows then
+      dbms_output.put_line('Devuelve más de un valor');
+  end p_id_orden;
+------------------------------------
+
+ procedure pr_alta ( pi_id_cli       sales_order.customer_id%type ,
+                     po_id_order out sales_order.order_id%type) IS
+
+
+  l_max_id  sales_order.order_id%type;
+  e_cli_inval exception;
+  pragma exception_init(e_cli_inval,-2291);
+
+
+BEGIN
+  null;
+  select max(order_id)+1    --> para que el nuevo id surgido del insert sea el siguiente al que era el máximo de los id (como si el valor mayor es el id insertado mas nuevo)
+  into l_max_id
+  from sales_order;
+
+
+  insert 
+  into sales_order
+      (order_id,
+       order_date,
+       ship_date,
+       customer_id,
+       total)
+  values
+      (l_max_id,
+       sysdate,
+       sysdate+7,
+       pi_id_cli,
+       0
+      ) ;   
+
+   po_id_order  := l_max_id;
+exception
+   when e_cli_inval then
+     dbms_output.put_line('Cliente invalido');
+end;
+---------------------------------------------------------
+procedure pr_alta_item(pi_id_order IN sales_order.order_id%type,
+                        pi_prod_id  IN product.product_id%type,
+                        pi_cantidad IN item.quantity%type ) is
+
+  l_max_item item.item_id%type;  
+  l_precio  price.list_price%type;   
+  e_sin_orden  exception;
+  pragma exception_init(e_sin_orden,-2291);                 
+begin
+    --valida
+    -- ordern inexistent0     2
+    -- producto inexistente    1
+    -- cantidad negativa
+    -- sin precio
+    if pi_cantidad <= 0  then
+       dbms_output.put_line('La cantidad no puede ser negativa');
+    else    
+        select nvl(max(item_id),0) + 1
+        into l_max_item
+        from item
+        where order_id = pi_id_order;
+
+        select list_price
+        into  l_precio
+        from price
+        where product_id = pi_prod_id
+        and  end_date is null;   --> PRECIO VIGENTE
+
+       insert into
+       item
+         (order_id,
+          item_id,
+          product_id,
+          quantity,
+          actual_price,
+          total)
+        values
+          (pi_id_order,
+          l_max_item,
+          pi_prod_id,
+          pi_cantidad,
+          l_precio, -- averiguar precio
+          pi_cantidad* l_precio
+
+          );   
+
+
+          dbms_output.put_line('Se dio de alta el item  '||l_max_item); 
+
+         update sales_order
+         set total = total  +   pi_cantidad* l_precio
+         where order_id = pi_id_order;
+      
+
+
+     end if;     
+EXCEPTION
+  WHEN no_data_found then
+          dbms_output.put_line('No existe el producto indicado o no tiene precio ');
+   when e_sin_orden then 
+          dbms_output.put_line('No existe la orden indicada');
+   when others then
+          dbms_output.put_line('Se produjo un error inesperado '||sqlerrm);
+
+ end;
+
+--**************************************************************************************************
+procedure pr_alta_item(pi_id_order IN sales_order.order_id%type,
+                        pi_prod_desc  IN product.description%type,
+                        pi_cantidad IN item.quantity%type ) is
+
+  l_prod_id product.product_id%type; 
+  e_prod_inex exception;
+  e_prod_muchos exception;
+  e_prod_otros  exception;
+  pragma exception_init(e_prod_inex,-20001);                 
+  pragma exception_init(e_prod_muchos,-20002);    
+  pragma exception_init(e_prod_otros,-20003);    
+
+begin
+  
+  l_prod_id := fu_prod_id (pi_prod_desc);
+  pr_alta_item ( pi_id_order , l_prod_id , pi_cantidad ); ---> IMPORTANTÍSIMO REUTILIZAR EL CÓDIGO (PROCEDIMIENTO ANTERIOR) EN ESTE PROCEDIMIENTO PARA LA SOBRECARGA
+
+  exception
+    when e_prod_inex then
+      dbms_output.put_line('No existe el producto indicado ');
+   when e_prod_muchos then
+      dbms_output.put_line('Existen muchos productos con la misma descripcion ');
+   when e_prod_otros then
+      dbms_output.put_line('Error Inesperado '|| sqlerrm);
+end;
+
+end P_ORDENES;
+
+
+--************************************************************
+--Prueba PKG
+--************************************************************
+
+
+declare
+  p_salida sales_order.order_id%type;
+
+begin
+  --P_ORDENES.pr_alta(104,p_salida); 
+  --dbms_output.put_line('Orden : '|| p_salida);
+  --P_ORDENES.pr_alta_item(622,100860,2); 
+  P_ORDENES.pr_alta_item(622,'ACE TENNIS RACKET III',3); 
+end;
+
+select * from item where order_id=622;
+
+-- EN EL PROCEDIMIENTO QUE LLAMA A OTRO (CON SOBRECARGA POR LO MENOS) Y TAMBIÉN LLAMA A UNA FUNCIÓN, EN ESTE PROCEDIMIENTO SOLO PONDREMOS LAS EXCEPCIONES DE LA FUNCIÓN CON
+-- ERRORES PROPIOS, LAS EXCEPCIONES DEL PROCEDIMIENTO ANIDADO NO HAY QUE TENERLAS EN CUENTA EN EL PROCEDIMIENTO ESTE YA QUE SE LAS ATRAPA CON UN MENSAJE EN LA PARTE DE 
+-- EXCEPCIONES DEL PROCEDIMIENTO ANIDADO. <------ ¡¡¡¡IMPORTANTÍSIMO!!!!  
+
+

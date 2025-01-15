@@ -1,0 +1,169 @@
+create or replace function valida_cliente
+  (pi_nombre customer.name%type)
+  return customer.customer_id%type 
+  as
+
+  v_cli_id customer.customer_id%type;
+  begin
+    select *
+    into v_cli_id 
+    from customer
+    where name=pi_nombre;
+    return v_cli_id;
+  end;
+
+
+  --bloque para probar funcion
+
+ --1era prueba, Todo OK
+  declare
+    cli_id number(6);
+  begin
+    cli_id := valida_cliente('JOCKSPORTS');
+    dbms_output.put_line(cli_id);
+  end;
+
+ 
+ --2da prueba, cambio por ALEJANDRO Y Capturo el error y envio un mensaje propio
+
+declare
+    cli_id number(6);
+    e_cli_no_ex exception;
+    pragma exception_init (e_cli_no_ex,-20001);
+  begin
+    cli_id := valida_cliente('ALEJANDRO');
+    dbms_output.put_line(cli_id);
+  --OJO!!! ESTO ESTA MAL -> no se va a ejecutar nunca pq si hay error va al area de excepcion, no sigue por aca
+  /*if cli_id is not null then
+    dbms_output.put_line (cli_id);
+  else
+    dbms_output.put_line (sqlerrm);
+  end if;
+  */
+  exception
+    when e_cli_no_ex then
+      dbms_output.put_line('Cliente no existe!!!!');
+  end; 
+
+--ej Practica 4 - ej 5 -- como ver el null
+--  dbms_output.put_line('-'||q_credit(0)||'-');
+
+--ejercicio de practica:
+
+/*
+Crear un procedimiento para dar de alta un departamento
+Recibe por parametros el nombre y el id de localidad.
+==>Devuelve por parametro en id de nuevo departamento creado.
+Para generar el nuevo id, se le suma 1 al maximo existente en la tabla
+CONTEMPLAR TODOS LOS ERRORES POSIBLES!!
+NUNCA CANCELAR!!!!
+*/
+
+CREATE OR REPLACE PROCEDURE alta_dep
+  (pi_name in department.name%type,
+   pi_loc in department.location_id%type,
+   po_dep_id out department.department_id%type) 
+IS
+
+l_id_max department.department_id%type;
+e_fk    exception;
+pragma exception_init (e_fk,-2291);
+
+BEGIN
+    select nvl(max(department_id),0) 
+    into l_id_max
+    from department;
+   
+     INSERT into department 
+     VALUES ((l_id_max + 1), upper(pi_name), pi_loc);
+     Dbms_Output.Put_Line('Se ha insertado un departamento');
+     po_dep_id := l_id_max;
+
+ EXCEPTION
+    when e_fk then
+        dbms_output.put_line('La Localidad es Incorrecta');
+    when Dup_val_on_index then    
+        dbms_output.put_line ('ERROR: Clave duplicada');
+    when others then
+        dbms_output.put_line('Error Inesperado: '|| sqlerrm);
+END; 
+
+--funcion nvl
+--usa dos parametros 
+--nvl (param1,param2)
+--param1 y param2 tienen q ser del mismo tipo
+--si param1 NO is null -> devuelve el param1 ->> Else devuelve el param2
+
+
+--Ejercicio.
+--crear un procedimiento lista productos
+--p cada producto, mostrar:
+-- prod_id desc  -fecha de la ultima venta-
+-- historial de precios (fecha desde  fecha_hasta   p_min   p_lista)
+--ordenado por vigencia
+--en caso de q nunca se haya vendido, informarlo, en lugar de poner la fecha
+
+
+
+
+ select  nvl(  to_char( max(order_date) )    , 'No vendido')     --- *--   nvl(to_char(max(sales_order.ORDER_DATE)), 'No vendido') 
+--        into v_last_sell 
+        from item i, 
+             sales_order so
+        where i.product_id = 1008--r_productos.product_id
+          and i.order_id = so.order_id;
+
+
+
+
+begin
+  pr_lista_productos;
+end;   
+
+
+
+procedimiento que recibe por parametro
+id_cliente
+id_de_vendedor
+
+actualiza el vendedor del cliente
+NO CANCELAR
+
+incidar si
+- si se actualizo correctamente
+- cliente no exste
+- vendedor no existe
+- cualquier otro error
+
+
+begin
+  PR_MODIFICA_VENDEDOR(199,752);
+ end; 
+
+
+ select  *
+ from customer
+ 100  7844 --  7521
+    
+
+
+declare
+  f_1  date;
+  f_2 date;
+begin
+  f_1  :=  to_date('01-04-2020','dd-mm-yyyy');
+  f_2  :=  to_date('01-06-2020','dd-mm-yyyy');
+
+  if f_1 > f_2 then
+    dbms_output.put_line('gano');
+  else
+    dbms_output.put_line('perdio');
+  end if;
+end;
+
+
+
+
+select *
+from price
+where product_id = 100860

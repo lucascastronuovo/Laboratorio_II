@@ -1,0 +1,318 @@
+MOTOR
+excepciones pre-definidas
+
+no_data_found
+too_many_rows
+dup_val_on_index
+value_error
+zero_divide
+
+
+no pre-definidas
+-2291 -- no existe padre
+-2292 -- existen hijos
+
+
+-19999  -- 0
+
+excepciones del usuario
+-49000     -20000
+
+select *
+from price
+
+declare
+
+  v_dep_name  department.name%type;
+  e_fk        exception;
+  pragma exception_init(e_fk,-2291);
+
+ begin
+   null;
+   select name
+   into v_dep_name
+   from department
+   where department_id = 10;
+
+   dbms_output.put_line(v_dep_name);
+
+ /* insert     
+   into department
+    (department_id, name,location_id)
+   values
+    (10,'Prueba',122); 
+*/
+--  dbms_output.put_line(8/0);
+
+/*update price
+set list_price = 1
+where product_id = 100871;
+*/
+   -- raise_application_error(-20001,'error propio');
+
+exception
+  when no_data_found then
+   dbms_output.put_line('no existe el departamento');
+  when e_fk  then
+   dbms_output.put_line('no existe la localidad indicada');
+ when others then
+   dbms_output.put_line('Se produjo un error inesperado '||sqlerrm);
+   dbms_output.put_line('Codigo  '||sqlcode);
+end ; 
+
+
+
+
+declare
+  v_nom  varchar(5);
+begin 
+  v_nom := 'Martin';
+   dbms_output.put_line('Nombre: '||v_nom);
+exception
+  when value_error then   
+   --dbms_output.put_line('El nombre ingresado es demasiado largo');
+   raise_application_error(-20015,'El nombre ingresado es demasiado largo');
+end;
+
+
+
+
+---cursores
+explicitos  / implicitos
+
+
+explicitos
+-daclarar
+   cursor
+   registro
+-abrir
+-recorrer
+-cerror
+
+
+atributos
+%found      true / false
+%notfound   true / false
+%rowcount   numero
+%isopen     true / false
+%isclosed   true / false
+
+
+declare
+  cursor c_cli is
+  select customer_id, name 
+  from customer
+  where salesperson_id = 7789;
+  
+  r_cli c_cli%rowtype;
+
+begin
+   open c_cli;
+   loop
+     fetch c_cli into r_cli;
+     exit when c_cli%notfound;
+      
+       dbms_output.put_line(r_cli.customer_id||' '||r_cli.name||' '||c_cli%rowcount);
+   end loop;  
+   dbms_output.put_line('antes de cerrer '||c_cli%rowcount);
+   close c_cli;
+   dbms_output.put_line('despues de cerrer '||c_cli%rowcount);
+end;  
+
+
+
+declare
+  cursor c_cli is
+  select customer_id, name 
+  from customer
+  where salesperson_id = 7789;
+  
+begin
+  for r_cli in c_cli loop    -- declarar el registo y abrirlo, 
+       dbms_output.put_line(r_cli.customer_id||' '||r_cli.name||' '||c_cli%rowcount);  -- fetch 
+  end loop;   --- cierra
+
+end;
+
+
+
+begin
+  update employee
+  set commission = 20
+  where department_id = 95;
+  
+  if sql%rowcount  > 0 then
+      dbms_output.put_line('Se modificaron : '|| sql%rowcount ||' filas'   );
+  else
+    dbms_output.put_line('No existen empleados en el departamento indicado'  );
+  end if;  
+end;  
+
+CREATE OR REPLACE PROCEDURE suma (num1 IN number, num2 IN number, v_total OUT number)
+IS
+--Declarativa
+begin
+    v_total := num1 + num2;
+--Exception
+end;
+/
+
+declare
+    v_num1 number(8) := 5;
+    v_num2 number(8) := 20;
+    v_total number(8) :=0;
+begin
+ suma(v_num1,v_num2,v_total);
+ dbms_output.put_line('Total suma: '|| v_total);
+end;
+/
+
+
+
+
+
+CREATE OR REPLACE PROCEDURE alCubo (numero IN OUT number)
+IS
+--Declarativa
+begin
+    numero := numero * numero;
+--Exception
+end;
+/
+
+
+
+
+
+
+create or replace procedure "INSERT_PRODUCT2"
+(p_id IN product.product_id%TYPE,
+p_nombre IN product.description%TYPE)
+is
+begin
+    insert into product values (p_id,p_nombre);
+    dbms_output.put_line('Producto Ingresado Correctamente');
+exception
+    when dup_val_on_index then
+        dbms_output.put_line('Valores Duplicados!!');
+end;
+
+
+
+
+declare
+   v_num1 number(8) := 5;
+    
+begin
+ alCubo(v_num1);
+ dbms_output.put_line('Total: '|| v_num1);
+end;
+/
+
+
+
+
+select status from all_objects where object_name = 'ALCUBO';
+
+
+
+
+begin
+    insert_product2(1055,'Este es un nuevo producto');
+end;
+
+select * from product order by 1;
+
+begin
+    pr_update_id_depto(2);
+end;
+
+select department_id  , name from department order by 1;
+
+
+
+
+
+create or replace procedure "PR_UPDATE_ID_DEPTO"
+(p_id IN department.department_id%TYPE)
+is
+begin
+    update department set name = 'FINANZAS'
+    where department_id = p_id;
+    if sql%rowcount = 0 then
+        dbms_output.put_line('El ID no existe');
+    else 
+        dbms_output.put_line('Departamento actualizado OK');
+    end if;
+end;
+
+
+
+
+--Ejercicio 
+Hacer procedimiento que cree un depto: que me pasen: un nombre y opcionalmente la localidad
+si no tengo localidad pongo el depto en la localidad 122
+y el id de la localidad lo genero internamente como el max que tengo +1 
+
+create or replace 
+procedure "PR_ALTA_DEP"
+                        (pi_nombre IN department.name%type,
+                         pi_loc_id IN department.location_id%type default 122) is
+
+  l_max_id  department.department_id%type;
+ 
+  e_fk   exception;
+  pragma exception_init(e_fk,-2291);
+
+begin
+   select nvl(max(department_id),0)
+   into  l_max_id
+   from department;
+
+  insert 
+  into  department
+    (department_id, name, location_id)
+  values
+    (l_max_id+1 , pi_nombre, pi_loc_id);
+
+  dbms_output.put_line('Se inserto correctamente');
+ 
+exception
+  when e_fk then
+    dbms_output.put_line('La localidad es incorrecta');
+  when others then
+   dbms_output.put_line('Se produjo un error inesperado: '||sqlerrm); 
+end;
+
+
+
+
+begin
+
+select salary, lpad('*',trunc(salary/100),'*')
+from employee
+
+
+select  lpad('*',8,'*')
+from dual
+
+
+select lpad(salary,10,'-')
+from employee
+
+
+dbms_output.put_line('v_asteriscos: ' || lpad('*', v_asteriscos, '*'));
+
+
+
+begin
+ --pr_alta_dep('Pueba 33',123);
+--  pr_alta_dep('Pueba 34');
+  pr_alta_dep('Pueba 35',1);
+
+ end;
+
+
+ select *
+ from department
+ order by department_id desc

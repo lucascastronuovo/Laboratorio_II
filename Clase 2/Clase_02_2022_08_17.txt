@@ -1,0 +1,192 @@
+select first_name, nvl(to_char(commission),'Sin Comision')
+from employee
+
+
+select first_name, decode(commission,null,'Sin comision',
+                                     300, 'poquito',
+                                     1400, 'Mucho',
+                                    commission)
+from employee;
+
+
+select distinct manager_id
+from employee
+
+
+select first_name, hire_date
+from employee
+where hire_date between to_date('01/01/06','dd/mm/yy')
+                    and to_date('31/12/06','dd/mm/yy')
+
+
+select first_name, hire_date
+from employee
+where to_char(hire_date,'yyyy') = '2006'
+
+
+select year
+from dual
+
+
+insert into 
+tabla [(campo1,campo2,campo3,etc)]
+values
+  (valor1,valor2,valor,etc)
+
+  insert into 
+  department 
+  values
+  (55,'Prueba',122)
+
+insert into 
+  department
+  (department_id,name,location_id) 
+  values
+  (58,'Prueba',155)
+
+
+  
+insert into 
+  department
+  (department_id,name,location_id) 
+  values
+  (59,'Prueba',122);
+
+--delete
+
+delete
+from table
+condiciones
+
+delete 
+from department
+where name = 'Prueba'  --department_id = 555
+
+
+delete 
+from department
+where department_id = 58
+
+
+  select *
+  from department
+  where name = 'Prueba'
+
+--update
+
+update tabla
+set campo1 = valor1,
+    campo2 = valor2,
+    etc
+condiciones
+
+update department
+set location_id = 167
+where name = 'Hola';
+
+update department
+set location_id = 155
+where name = 'Prueba'
+
+insert   1, error
+update   0, 1, N, error
+delete   0, 1, N , error
+
+
+
+select *
+from location
+
+savepoint 1
+commit;
+rollback;
+
+
+
+savepoint 1
+oper 1
+oper 2
+savepoint 2
+oper 3
+
+
+--Bloques anonimos
+declare
+   variables
+   constantes
+   types
+   cursores
+
+   -----        /*Declarativa*/
+begin
+  null;  /*ejecucion*/
+exception    /*manejo de excepciones */
+   ------  
+end;
+
+
+
+declare
+  v_nombre        varchar2(15) default 'Pedro';
+  v_edad          number(2);
+  v_fecha         date    := sysdate ;
+  v_encontre      boolean;
+  v_precio        number(6,2);
+  c_iva  constant number(3,2)  := 0.21;
+  v_nom           employee.first_name%type;  -- formato de 1 campo
+  vr_emple        employee%rowtype;          -- formato de 1 fila 
+
+
+begin
+    --v_edad  := :ingrese_su_edad;
+    dbms_output.put_line('Edad: '||v_edad );
+
+   v_precio := 100;
+   dbms_output.put_line('precio: '||v_precio ||'+'||v_precio*c_iva);
+    dbms_output.put_line('Nombre: '||v_nombre);
+   v_nombre := 'Ale';
+   dbms_output.put_line('Nombre: '||v_nombre);
+   v_nombre := 'Juan';
+   dbms_output.put_line('Nombre: '||v_nombre);
+   dbms_output.put_line('Fecha: '||v_fecha);
+  null;
+
+  vr_emple.first_name  := 'Pepe';
+  vr_emple.salary      := 1500;
+
+  dbms_output.put_line(vr_emple.first_name||' '||vr_emple.salary);
+
+end;
+
+
+
+
+crear un bloque anónimo en que ingresen por variable de sustitución un id de departamento y un nombre
+y de de alta un departamento.
+Solo por este ejercicio no contemplar excepciones (Errores).
+
+
+select name
+from department
+where department_id = 10
+
+declare
+  v_nom varchar2(14);
+begin
+  select name
+  into v_nom
+  from department
+  where department_id = 10;
+
+  dbms_output.put_line(v_nom);
+
+
+end; 
+
+
+
+select first_name, salary, grade_id
+from employee ,
+     salary_grade 
+where salary between lower_bound 
+                 and upper_bound      
